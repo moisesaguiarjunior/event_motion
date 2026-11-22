@@ -5,6 +5,7 @@ import argparse
 import json
 import os
 from pathlib import Path
+from subprocess import TimeoutExpired
 from tempfile import NamedTemporaryFile
 from time import monotonic, sleep
 from urllib.error import HTTPError, URLError
@@ -83,7 +84,7 @@ def main():
             temporary.write(data)
             temporary.flush()
             os.link(temporary.name, args.out)
-    except (OSError, ValueError, KeyError) as error:
+    except (OSError, ValueError, KeyError, TimeoutExpired) as error:
         parser.exit(1, f"{error}\n")
     print(f"Saved {args.out} (ComfyUI prompt {prompt_id})")
 

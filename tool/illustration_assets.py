@@ -3,6 +3,8 @@
 from pathlib import Path
 import re
 import struct
+import subprocess
+import zlib
 
 from png_alt_text import SIGNATURE
 
@@ -26,6 +28,34 @@ def check_png(data):
     width, height = struct.unpack_from(">II", data, 16)
     if not (1 <= width <= MAX_SIDE and 1 <= height <= MAX_SIDE):
         raise ValueError("Artwork must fit within 2048 × 2048 px.")
+
+    offset = len(SIGNATURE)
+    complete = False
+    while offset + 12 <= len(data):
+        size, kind = struct.unpack_from(">I4s", data, offset)
+        content_end = offset + 8 + size
+        end = content_end + 4
+        if end > len(data):
+            break
+        crc, = struct.unpack_from(">I", data, content_end)
+        if crc != zlib.crc32(data[offset + 4:content_end]):
+            raise ValueError("Artwork contains a damaged PNG chunk.")
+        if kind in {b"acTL", b"fcTL", b"fdAT"}:
+            raise ValueError("Artwork must be a single-frame PNG.")
+        if kind == b"IEND":
+            complete = size == 0 and end == len(data)
+            break
+        offset = end
+    if not complete:
+        raise ValueError("Artwork must be a complete PNG image.")
+
+    decoded = subprocess.run(
+        ["ffmpeg", "-v", "error", "-xerror", "-i", "pipe:0", "-map", "0:v:0",
+         "-frames:v", "1", "-abort_on", "empty_output", "-f", "null", "-"],
+        input=data, capture_output=True, timeout=15,
+    )
+    if decoded.returncode:
+        raise ValueError("Artwork contains PNG image data that cannot be decoded.")
     return data
 
 

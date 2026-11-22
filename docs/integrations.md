@@ -21,7 +21,7 @@ Results are written under `example/build/hyperframes/<mode>/` unless `--out` is 
 
 ## ComfyUI para camadas de ilustração
 
-Exporte um workflow do ComfyUI em formato API e identifique o nó que salva o PNG. O exemplo `comfyui_mask_png.api.json` usa o nó `4`. Para reproduzi-lo, coloque `editorial-art.png` e `editorial-mask.png` com a mesma resolução na pasta de entrada do ComfyUI. A máscara usa vermelho `255` para remover o fundo e `0` para preservar a arte. Com o servidor local em `127.0.0.1:8188`, rode da raiz do Event Motion. [Workflow de máscara](../example/fixtures/comfyui_mask_png.api.json) · [API do ComfyUI](https://docs.comfy.org/development/comfyui-server/comms_routes)
+Exporte um workflow do ComfyUI em formato API e identifique o nó que salva o PNG. O exemplo `comfyui_mask_png.api.json` usa o nó `4`. Para reproduzi-lo, coloque `editorial-art.png` e `editorial-mask.png` com a mesma resolução na pasta de entrada do ComfyUI. A máscara usa vermelho `255` para remover o fundo e `0` para preservar a arte. Com o servidor local em `127.0.0.1:8188` e FFmpeg no `PATH`, rode da raiz do Event Motion. [Workflow de máscara](../example/fixtures/comfyui_mask_png.api.json) · [API do ComfyUI](https://docs.comfy.org/development/comfyui-server/comms_routes)
 
 ```bash
 python3 -B tool/comfyui_asset.py example/fixtures/comfyui_mask_png.api.json \

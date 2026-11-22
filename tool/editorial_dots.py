@@ -468,6 +468,8 @@ def checked_draft(draft, plan, allowed_assets=()):
     template = draft["template"]
     if template == "data_story":
         checked_graph(visual, plan)
+    if template == "editorial_illustration":
+        visual["alt_text"] = draft["alt_text"].strip()
     result = subprocess.run(
         ["dart", str(ROOT / "example/bin/validate_editorial.dart"), template],
         input=encode(visual), encoding="utf-8", capture_output=True,
@@ -510,8 +512,9 @@ def render(visual, draft, logs, artifacts):
             shutil.copyfile(logs / "illustration-assets" / name, sidecars / name)
     log_path = output / "render.log"
     env = os.environ.copy()
-    if (draft["template"] == "editorial_illustration"
-            or visual.get("chart_kind") in {"paired_dot", "stacked_bar"}):
+    if draft["template"] == "editorial_illustration":
+        env.pop("EVENT_MOTION_EDITORIAL_ALT_TEXT", None)
+    elif visual.get("chart_kind") in {"paired_dot", "stacked_bar"}:
         env["EVENT_MOTION_EDITORIAL_ALT_TEXT"] = draft["alt_text"]
     try:
         with log_path.open("w", encoding="utf-8") as log:
