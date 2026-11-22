@@ -4,7 +4,7 @@ See the [use-case guide](casos-de-uso.md#fluxo-da-biblioteca-até-a-revisão) fo
 
 ## HyperFrames and Fluvie
 
-Use Python, Node.js 22+, Flutter, FFmpeg with `libvpx-vp9`, and Chrome. The command installs the locked HyperFrames dependencies with `npm ci` when needed. Set `HYPERFRAMES_BROWSER_PATH` to select your Chrome executable. The render stages contain the local template, the validated card data, and the JetBrains Mono fonts from the pinned Fluvie package. [HyperFrames local rendering](https://github.com/heygen-com/hyperframes/blob/main/docs/guides/rendering.mdx)
+Use Python, Node.js 22+, Flutter, FFmpeg with `libvpx-vp9`, and Chrome. The command installs the locked HyperFrames and GSAP dependencies with `npm ci` when needed. Set `HYPERFRAMES_BROWSER_PATH` to select your Chrome executable. The render stages contain the local template, the validated card data, and the JetBrains Mono fonts from the pinned Fluvie package. `cards.js` uses a paused GSAP timeline with the cues from the JSON. HyperFrames seeks that timeline for each frame. [HyperFrames local rendering](https://github.com/heygen-com/hyperframes/blob/main/docs/guides/rendering.mdx) · [GSAP in HyperFrames](https://hyperframes.app/docs/3-guides/3-gsap-animation)
 
 ```sh
 bash tool/render_example.sh card_sequence
@@ -18,6 +18,20 @@ python3 tool/render_hyperframes.py opaque --audio ./sound.wav
 Use `--cards ./cards.json` to supply the same document to HyperFrames that `bash tool/render_example.sh card_sequence ./cards.json` passes to Flutter. Start from the [shared fixture](../example/fixtures/cards.json). The four card slots control the four illustrations. Keep their order and IDs while editing titles, copy, colors, and cue times.
 
 Results are written under `example/build/hyperframes/<mode>/` unless `--out` is supplied. The bridge checks dimensions, frame rate, duration, and decoded alpha where applicable before giving the clip to Fluvie. Hybrid outputs include `hybrid.mp4`, `hybrid.png`, and metrics for stage timing and file sizes.
+
+## ComfyUI para camadas de ilustração
+
+Exporte um workflow do ComfyUI em formato API e identifique o nó que salva o PNG. O exemplo `comfyui_mask_png.api.json` usa o nó `4`. Para reproduzi-lo, coloque `editorial-art.png` e `editorial-mask.png` com a mesma resolução na pasta de entrada do ComfyUI. A máscara usa vermelho `255` para remover o fundo e `0` para preservar a arte. Com o servidor local em `127.0.0.1:8188`, rode da raiz do Event Motion. [Workflow de máscara](../example/fixtures/comfyui_mask_png.api.json) · [API do ComfyUI](https://docs.comfy.org/development/comfyui-server/comms_routes)
+
+```bash
+python3 -B tool/comfyui_asset.py example/fixtures/comfyui_mask_png.api.json \
+  --node 4 --out ./minha-pauta/assets/chip.png
+bash tool/render_example.sh editorial_illustration ./minha-pauta/visual.json
+```
+
+No `visual.json`, adicione `"asset": "chip.png"` ao cartão desejado e mantenha seu `symbol`. O PNG pode ter transparência e deve caber em 2048 × 2048 e 4 MiB. O renderer carrega a imagem antes da captura. A mesma peça funciona na capa e no vídeo, com o texto e as conexões definidos no JSON.
+
+Para uma pauta no Dots, copie a imagem aprovada para `example/assets/editorial_local/` e adicione `"illustration_assets": ["chip.png"]` ao briefing JSON. O render recebe uma cópia local dos arquivos escolhidos. O pacote devolvido guarda os PNGs referenciados em `assets/` ao lado do JSON. Use o comando acima apontando para esse JSON para refazer a arte em outra sessão. [Pasta de entrega](dots-editorial.md#pasta-de-entrega)
 
 ## Social Studio review
 

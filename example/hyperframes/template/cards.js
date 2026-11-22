@@ -21,7 +21,19 @@ const cards = data.cards.map((entry) => {
 const clamp = (value) => Math.min(1, Math.max(0, value));
 const mix = (a, b, t) => a + (b - a) * t;
 const between = (a, b, t) => a.map((value, index) => mix(value, b[index], t));
-const ease = (time, cue, duration) => 1 - (1 - clamp((time - cue) / duration)) ** 3;
+
+const timeline = gsap.timeline({ paused: true, defaults: { ease: 'power2.out' } });
+const layout = { mosaic: 0 };
+timeline.to(layout, { mosaic: 1, duration: 0.620 }, data.mosaicMs / 1000);
+for (const [index, card] of cards.entries()) {
+  card.motion = { entered: 0, dock: 0, drawing: 0 };
+  const start = card.entry.atMs / 1000;
+  timeline.to(card.motion, { entered: 1, duration: 0.420 }, start);
+  timeline.to(card.motion, { drawing: 1, duration: 0.790 }, start);
+  if (index + 1 < cards.length) {
+    timeline.to(card.motion, { dock: 1, duration: 0.480 }, cards[index + 1].entry.atMs / 1000);
+  }
+}
 
 function draw(canvas, id, color, progress) {
   const width = Math.round(canvas.clientWidth);
@@ -78,15 +90,14 @@ function draw(canvas, id, color, progress) {
   }
 }
 
-function seek(seconds) {
+function paintFrame(seconds) {
   const time = seconds * 1000;
   const next = cards.find(({ entry }) => time < entry.atMs);
-  const mosaic = ease(time, data.mosaicMs, 620);
+  const { mosaic } = layout;
   status.textContent = next ? `Up next  ${next.entry.title}` : time >= data.mosaicMs ? 'Draft ready for review' : 'Preparing the final draft';
   for (const [index, card] of cards.entries()) {
-    const { entry, element, heading, caption, canvas } = card;
-    const entered = ease(time, entry.atMs, 420);
-    const dock = index + 1 < cards.length ? ease(time, cards[index + 1].entry.atMs, 480) : 0;
+    const { entry, element, heading, caption, canvas, motion } = card;
+    const { entered, dock, drawing } = motion;
     const focus = [8, 14 + 24 * (1 - entered), 404, 269];
     const rail = [index * 107, 321, 99, 64];
     const slot = [(index % 2) * 216, 8 + Math.floor(index / 2) * 197, 204, 185];
@@ -102,9 +113,11 @@ function seek(seconds) {
     heading.style.fontSize = `${mix(12, mix(21, 32, large), detail)}px`;
     caption.style.fontSize = `${mix(14, 16, large)}px`;
     caption.hidden = detail <= 0.6;
-    draw(canvas, entry.id, entry.color, ease(time, entry.atMs, 790));
+    draw(canvas, entry.id, entry.color, drawing);
   }
 }
 
-window.__timelines = { cards: { duration: () => data.durationMs / 1000, pause: () => {}, seek, time: seek } };
-seek(0);
+window.addEventListener('hf-seek', (event) => paintFrame(event.detail.time));
+paintFrame(0);
+window.__timelines = window.__timelines || {};
+window.__timelines.cards = timeline;

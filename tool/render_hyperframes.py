@@ -36,9 +36,13 @@ def fluvie_fonts():
 
 def hyperframes_cli():
     executable = PROJECT / 'node_modules/.bin/hyperframes'
-    installed = PROJECT / 'node_modules/hyperframes/package.json'
-    expected = json.loads((PROJECT / 'package.json').read_text())['devDependencies']['hyperframes']
-    if not (executable.is_file() and installed.is_file() and json.loads(installed.read_text())['version'] == expected):
+    expected = json.loads((PROJECT / 'package.json').read_text())['devDependencies']
+
+    def installed(package, version):
+        manifest = PROJECT / 'node_modules' / package / 'package.json'
+        return manifest.is_file() and json.loads(manifest.read_text())['version'] == version
+
+    if not (executable.is_file() and all(installed(name, version) for name, version in expected.items())):
         run(['npm', 'ci', '--no-audit', '--no-fund'], cwd=PROJECT)
     return executable
 
@@ -102,6 +106,7 @@ def render(args):
         sandbox = Path(temporary)
         cards, data, canvas = stage_project(sandbox / 'scene', args.cards, args.mode, args.audio)
         executable = hyperframes_cli()
+        shutil.copyfile(PROJECT / 'node_modules/gsap/dist/gsap.min.js', cards.parent / 'gsap.min.js')
         codec = 'webm' if overlay else 'mp4'
         clip = sandbox / f'hyperframes.{codec}'
         log = sandbox / 'hyperframes.log'

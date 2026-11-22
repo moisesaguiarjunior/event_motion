@@ -66,3 +66,9 @@ jobs:
           bash tool/render_example.sh data_story
           ffprobe -v error -select_streams v:0 -show_entries stream=width,height \
             -of csv=p=0 example/build/data_story/data_story.png | grep -Fx '1440,1800'
+          bash tool/render_example.sh editorial_illustration_video
+          illustration=example/build/editorial_illustration_video/editorial_illustration_video
+          ffprobe -v error -select_streams v:0 -show_entries stream=width,height \
+            -of csv=p=0 "$illustration.png" | grep -Fx '1080,1350'
+          ffprobe -v error -select_streams v:0 -show_entries stream=width,height,nb_frames \
+            -of csv=p=0 "$illustration.mp4" | grep -Fx '1080,1350,120'

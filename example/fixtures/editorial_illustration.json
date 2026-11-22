@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "title": "Dois produtos, um canal de compra",
+  "subtitle": "ChatGPT Enterprise passou a ser vendido no mesmo marketplace que Claude Enterprise.",
+  "origin": {
+    "title": "Empresa compradora",
+    "detail": "Avalia uma assinatura",
+    "symbol": "organization"
+  },
+  "channel": {
+    "title": "AWS Marketplace",
+    "detail": "Canal de compra",
+    "symbol": "marketplace"
+  },
+  "destinations": [
+    {
+      "title": "ChatGPT Enterprise",
+      "detail": "Da OpenAI",
+      "symbol": "application"
+    },
+    {
+      "title": "Claude Enterprise",
+      "detail": "Da Anthropic",
+      "symbol": "application"
+    }
+  ],
+  "annotation": {
+    "text": "A compra elegível do ChatGPT pode contar para o compromisso de gasto com a AWS.",
+    "source_ids": ["1"]
+  },
+  "sources": [
+    {"id": "1", "label": "OpenAI · anúncio"},
+    {"id": "2", "label": "AWS Marketplace · Anthropic"}
+  ],
+  "alt_text": "Diagrama de compra. Uma empresa passa pelo AWS Marketplace e encontra duas opções, ChatGPT Enterprise da OpenAI e Claude Enterprise da Anthropic. Uma compra elegível de ChatGPT pode contar para o compromisso de gasto com a AWS."
+}

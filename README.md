@@ -6,6 +6,8 @@ See the [Portuguese use-case and customization guide](https://github.com/moisesa
 
 The [Dot editorial workflow](https://github.com/moisesaguiarjunior/event_motion/blob/main/docs/dots-editorial.md) turns a private queued briefing into sourced X copy, an editorial review, and optional artwork or video.
 
+The [illustration map](docs/mapa-de-ilustracoes.md) shows which Dot templates fit each story and how to reuse their editable examples.
+
 ## Use it
 
 Add `event_motion` as a [Git or local path dependency](https://dart.dev/tools/pub/dependencies) in a Flutter app. Import `package:event_motion/event_motion.dart` alongside `package:flutter/widgets.dart`. See [compatibility and API scope](https://github.com/moisesaguiarjunior/event_motion/blob/main/docs/compatibility.md).
