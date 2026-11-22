@@ -2,6 +2,8 @@
 
 Flutter widgets for showing what happened and when. Describe the events once, then use the same point in time to draw a diagram, a feed, or any other Flutter widget.
 
+See the [Portuguese use-case and customization guide](https://github.com/moisesaguiarjunior/event_motion/blob/main/docs/casos-de-uso.md) for charts, editorial posts, character motion, and the path from Fluvie export to Social Studio review.
+
 ## Use it
 
 Add `event_motion` as a [Git or local path dependency](https://dart.dev/tools/pub/dependencies) in a Flutter app. Import `package:event_motion/event_motion.dart` alongside `package:flutter/widgets.dart`. See [compatibility and API scope](https://github.com/moisesaguiarjunior/event_motion/blob/main/docs/compatibility.md).

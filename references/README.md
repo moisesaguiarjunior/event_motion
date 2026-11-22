@@ -2,6 +2,8 @@
 
 Esta pasta reúne as referências visuais e os renders do projeto. As mídias ficam na cópia local. Este índice acompanha o código e mantém o crédito de cada referência.
 
+O [guia de casos de uso](../docs/casos-de-uso.md) mostra como reproduzir e customizar as composições e quando usar Fluvie, Handcrafted, HyperFrames ou Social Studio.
+
 ## 01 · Fontes
 
 | Pasta | Fonte | O que observar |

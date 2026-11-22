@@ -16,8 +16,10 @@ The library renders Flutter widgets at a supplied time. Both examples use a [sha
 
 The [card sequence](../example/lib/card_sequence.dart) uses `statusOf` to show cards once their cue is reached and `progressSince` to move them between the focus area, the row of previous cards and the final mosaic. Layout and perspective stay with the composition. The same timeline API is enough to drive the cards and their painted previews.
 
-Use HyperFrames for a scene authored in HTML or for a transparent effect. Render it locally before starting the Fluvie export. Place opaque clips with `Clip.file('scene.mp4')` or transparent VP9 clips with `Clip.file('overlay.webm')`. Match the frame rate and declare the clip's start in the Fluvie composition. The local desktop path has been checked with a one-second silent WebM over a Flutter background. A reusable adapter still needs coverage across clip starts, audio and output sizes. [HyperFrames transparent export](https://github.com/heygen-com/hyperframes/blob/main/docs/guides/rendering.mdx#transparent-video)
+Use HyperFrames for a scene authored in HTML or for a transparent effect. Render it locally before starting the Fluvie export. Place opaque clips with `Clip.file('scene.mp4')` or transparent VP9 clips with `Clip.file('overlay.webm')`. Match the frame rate and declare the clip's start in the Fluvie composition. The supplied bridge verifies both paths at 1080 × 1350, including a transparent clip over Flutter and an opaque clip with audio. Both clips start 18 frames into the composition. [Integration commands](integrations.md) · [Render checks](verification.md#hybrid-and-adoption) · [HyperFrames transparent export](https://github.com/heygen-com/hyperframes/blob/main/docs/guides/rendering.mdx#transparent-video)
 
 ## Feed a local model into a template
 
 The agent pipeline reads a [versioned JSON document](workflow-json.md). A plain Dart reader validates the fields, layout, references and event order. The Flutter adapter turns the validated data into a diagram and timeline. The local authoring command uses the same reader to check model output before rendering. The two card sequence renderers read a shared document for copy, color, and timing.
+
+See the [use-case and customization guide](casos-de-uso.md) for the available authoring paths and the optional handoff to Social Studio.
