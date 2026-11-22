@@ -16,7 +16,8 @@ absolute_path() {
 
 case "$#:${1:-}" in
   0:) set -- --name 'exports (agent_pipeline|card_sequence) as MP4 and PNG' ;;
-  1:agent_pipeline|1:card_sequence|1:activation|1:comparison) set -- --plain-name "exports $1 as MP4 and PNG" ;;
+  1:agent_pipeline|1:card_sequence|1:activation) set -- --plain-name "exports $1 as MP4 and PNG" ;;
+  1:comparison) set -- --plain-name 'exports comparison as PNG' ;;
   2:card_sequence)
     if [[ ! -f "$2" ]]; then
       printf 'Card file not found: %s\n' "$2" >&2
@@ -40,7 +41,7 @@ case "$#:${1:-}" in
       paper|linen) export EVENT_MOTION_MATERIAL="$2" ;;
       *) printf '%s\n' 'Comparison material must be paper or linen.' >&2; exit 2 ;;
     esac
-    set -- --plain-name 'exports comparison as MP4 and PNG'
+    set -- --plain-name 'exports comparison as PNG'
     ;;
   2:agent_pipeline|3:agent_pipeline)
     if [[ ! -f "$2" ]]; then

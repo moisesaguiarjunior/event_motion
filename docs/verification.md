@@ -32,4 +32,6 @@ The transparent and opaque imports were tested at 1080 × 1350. Each source had 
 | Transparent | 8.89 s | 31.45 s | 263,536 B | 1,084,752,000 B | 158,791 B |
 | Opaque with sound | 18.39 s | 23.04 s | 970,715 B | 1,084,752,000 B | 754,565 B |
 
-Eight samples from the agent panel passed Social Studio's Story job validator and produced a 12-second review bundle. The storyboard follows Social Studio's photo-sequence input format.
+An export from a clean source archive installed the pinned dependencies and rebuilt the hybrid. Its final PNG and MP4 matched the originals byte for byte. The raw Flutter capture was 1,084,752,000 bytes as measured before teardown.
+
+Eight samples from the agent panel passed Social Studio's Story job validator and produced a 12-second review bundle. The storyboard follows Social Studio's photo-sequence input format. In Chrome, scene selection sought to 7.5 seconds and caption selection sought to 9 seconds. Both paused playback at the selected moment.

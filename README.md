@@ -4,7 +4,7 @@ Flutter widgets for showing what happened and when. Describe the events once, th
 
 ## Use it
 
-Add `event_motion` as a [Git or local path dependency](https://dart.dev/tools/pub/dependencies) in a Flutter app. Import `package:event_motion/event_motion.dart` alongside `package:flutter/widgets.dart`. See [compatibility and API scope](docs/compatibility.md).
+Add `event_motion` as a [Git or local path dependency](https://dart.dev/tools/pub/dependencies) in a Flutter app. Import `package:event_motion/event_motion.dart` alongside `package:flutter/widgets.dart`. See [compatibility and API scope](https://github.com/moisesaguiarjunior/event_motion/blob/main/docs/compatibility.md).
 
 ```dart
 final diagram = MotionDiagram(
@@ -63,7 +63,7 @@ Copy the [example input](example/fixtures/agent_pipeline.json) and edit its titl
 bash tool/render_example.sh agent_pipeline ./workflow.json
 ```
 
-The command writes `workflow.mp4` and `workflow.png` to `example/build/workflow/` or to a directory you supply as the last argument. Invalid input fails with the path to the field to fix. See the [workflow contract](docs/workflow-json.md) and the [JSON Schema](example/spec/workflow.v1.schema.json).
+The command writes `workflow.mp4` and `workflow.png` to `example/build/workflow/` or to a directory you supply as the last argument. Invalid input fails with the path to the field to fix. See the [workflow contract](https://github.com/moisesaguiarjunior/event_motion/blob/main/docs/workflow-json.md) and the [JSON Schema](example/spec/workflow.v1.schema.json).
 
 ## Generate a workflow with a local model
 
@@ -73,7 +73,7 @@ With Ollama running and `qwen3.5:4b` installed, run the authoring command from t
 bash tool/author_workflow.sh example/fixtures/briefs/newsletter.txt example/build/my-post
 ```
 
-The command writes an editable JSON spec, a video, and a cover alongside one another. Supply a workflow JSON as a third argument to keep a supplied event log intact. See [local authoring](docs/local-authoring.md) and [the HyperFrames and Social Studio examples](docs/integrations.md).
+The command writes an editable JSON spec, a video, and a cover alongside one another. Supply a workflow JSON as a third argument to keep a supplied event log intact. See [local authoring](https://github.com/moisesaguiarjunior/event_motion/blob/main/docs/local-authoring.md) and [the HyperFrames and Social Studio examples](https://github.com/moisesaguiarjunior/event_motion/blob/main/docs/integrations.md).
 
 ## Develop
 
@@ -84,4 +84,4 @@ flutter test
 (cd example && flutter test)
 ```
 
-See the [architecture](docs/architecture.md), [roadmap](docs/roadmap.md), and [verification results](docs/verification.md).
+See the [architecture](https://github.com/moisesaguiarjunior/event_motion/blob/main/docs/architecture.md), [roadmap](https://github.com/moisesaguiarjunior/event_motion/blob/main/docs/roadmap.md), and [verification results](https://github.com/moisesaguiarjunior/event_motion/blob/main/docs/verification.md).

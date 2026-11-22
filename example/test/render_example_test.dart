@@ -65,7 +65,8 @@ void main() {
         ),
       ),
   ]) {
-    testWidgets('exports $name as MP4 and PNG', skip: !_render, (tester) async {
+    final formats = name == 'comparison' ? 'PNG' : 'MP4 and PNG';
+    testWidgets('exports $name as $formats', skip: !_render, (tester) async {
       final outputName = name == 'agent_pipeline' && workflow != null
           ? 'workflow'
           : name == 'comparison' && material != null
