@@ -1,0 +1,47 @@
+{
+  "chart_kind": "stacked_bar",
+  "title": "Where the extra $100 for enterprise AI came from",
+  "subtitle": "Incremental global enterprise AI deployment spending, 2026.",
+  "chart_title": "Sources of spending and who received it",
+  "unit": "USD per extra $100",
+  "chart_source": "[menlo]",
+  "labels": [
+    "New budgets",
+    "Stayed with established vendors",
+    "Went to AI-native vendors",
+    "Other sources"
+  ],
+  "series": [
+    {
+      "name": "Share",
+      "values": [
+        55,
+        13,
+        9,
+        23
+      ]
+    }
+  ],
+  "subtotal": {
+    "start_index": 1,
+    "end_index": 2,
+    "label": "from existing software budgets"
+  },
+  "value_prefix": "$",
+  "approximate_indices": [
+    3
+  ],
+  "annotation": {
+    "series_index": 0,
+    "label_index": 3,
+    "note": "Other sources are the rounded remainder."
+  },
+  "evidence_title": "",
+  "evidence": [],
+  "timeline_title": "",
+  "timeline": [],
+  "sources": [
+    "[menlo] Menlo Ventures · November 2026 · global enterprise AI deployment"
+  ],
+  "alt_text": "For every additional $100 in enterprise AI deployment spending, $55 came from new budgets and about $23 from other sources. Existing software budgets supplied $22, of which $13 stayed with established vendors and $9 went to AI-native vendors."
+}

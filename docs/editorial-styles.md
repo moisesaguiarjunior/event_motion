@@ -1,12 +1,14 @@
 # Editorial compositions
 
-Each template exports a 1080 × 1350 canvas from Flutter and Fluvie, with native text and artwork drawn locally. Run the commands from the repository root with Flutter and FFmpeg on your path.
+The templates export a 4:5 canvas from Flutter and Fluvie, with native text and artwork drawn locally. Run the commands from the repository root with Flutter and FFmpeg on your path. Data-story exports with a JSON input use Python 3 to embed the optional PNG description.
 
 | Command after `bash tool/render_example.sh` | Input to copy | Default output |
 | --- | --- | --- |
 | `editorial_catalog` | [editorial_catalog.json](../example/fixtures/editorial_catalog.json) | 7.5-second MP4 and full-grid PNG |
 | `character_poster` | [workshop_team.json](../example/fixtures/workshop_team.json) | PNG with five illustrated roles |
 | `character_dashboard` | [workshop_team.json](../example/fixtures/workshop_team.json) | 8-second MP4 and active-step PNG |
+| `editorial_matrix` | [Matrix with a headline statistic](../example/fixtures/editorial_matrix_hero.json) | PNG |
+| `data_story` or `data_story_video` | [Paired dots](../example/fixtures/data_story_paired_dot.json), [fixed axis](../example/fixtures/data_story_axis.json), [stacked bar](../example/fixtures/data_story_stacked_bar.json), [grouped donut](../example/fixtures/data_story_grouped_donut.json) | PNG, plus an 8-second MP4 with `data_story_video` |
 
 Videos run at 24 fps without an audio track. Files go to `example/build/<composition>/` by default. Supply a custom JSON file and an optional destination after the composition name.
 
@@ -25,6 +27,8 @@ Choose `flow` for a sequence, `bars` for a comparison, `curve` for change, or `o
 Set the optional `palette` field to `paper`, `blueprint`, or `rose`. A tile can set an optional `accent` in `#RRGGBB` to recolor its diagram and focus outline. Edit `diagram` and `accent` together to change a tile's visual treatment without changing its copy or playback order.
 
 Keep tile titles within 22 characters and notes within 43. Concise copy gives diagrams more room, particularly with nine to twelve tiles, which use three columns. The [twelve-tile fixture](../example/fixtures/editorial_catalog_12.json) demonstrates a dense layout with reverse playback order. Review the final PNG at the size of a phone feed.
+
+Add an optional `footer` for a scope note of up to 110 characters and an optional `sources` array for up to seven labels of up to 36 characters each. Include the IDs used in the tiles, for example `"[S1] aws.amazon.com"`. Both fields appear below the grid on the PNG and throughout the video. Cards continue to highlight in playback order.
 
 ## Generate a grid locally
 

@@ -20,14 +20,19 @@ final class CatalogDocument {
     this.title,
     this.subtitle,
     this.palette,
+    this.footer,
+    List<String> sources,
     List<CatalogTile> tiles,
     List<String> order,
-  ) : tiles = List.unmodifiable(tiles),
+  ) : sources = List.unmodifiable(sources),
+      tiles = List.unmodifiable(tiles),
       order = List.unmodifiable(order);
 
   final String title;
   final String subtitle;
   final CatalogPalette palette;
+  final String? footer;
+  final List<String> sources;
   final List<CatalogTile> tiles;
   final List<String> order;
 
@@ -40,7 +45,7 @@ final class CatalogDocument {
       value,
       root,
       const {'version', 'title', 'subtitle', 'tiles', 'order'},
-      optional: const {'palette'},
+      optional: const {'palette', 'footer', 'sources'},
     );
     if (document['version'] != 1) {
       throw FormatException('$root.version: expected 1');
@@ -100,6 +105,24 @@ final class CatalogDocument {
             CatalogPalette.values,
           )
         : CatalogPalette.paper;
-    return CatalogDocument._(title, subtitle, palette, tiles, order);
+    final footer = document.containsKey('footer')
+        ? editorialCopy(document['footer'], '$root.footer', 110)
+        : null;
+    final rawSources = document.containsKey('sources')
+        ? editorialList(document['sources'], '$root.sources', 0, 7)
+        : const <Object?>[];
+    final sources = [
+      for (final (index, value) in rawSources.indexed)
+        editorialCopy(value, '$root.sources[$index]', 36),
+    ];
+    return CatalogDocument._(
+      title,
+      subtitle,
+      palette,
+      footer,
+      sources,
+      tiles,
+      order,
+    );
   }
 }

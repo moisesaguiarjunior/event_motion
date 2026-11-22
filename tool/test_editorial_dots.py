@@ -1,11 +1,15 @@
 import copy
 import json
 from pathlib import Path
+import struct
 import tempfile
 import unittest
+import zlib
+from subprocess import CalledProcessError, TimeoutExpired
 from unittest.mock import patch
 
 import editorial_dots as editorial
+from png_alt_text import DESCRIPTION, SIGNATURE, embed_alt_text
 
 
 def receipt(verdict, findings=None, generator_requests=None):
@@ -27,7 +31,8 @@ class EditorialTest(unittest.TestCase):
         }
         self.plan = {
             "status": "ready", "reason": "", "thesis": "A diferença aparece antes do encode.",
-            "hook": "O mesmo vídeo. 288 quadros a mais.", "voice": ["Preserve the terse opening."],
+            "hook": "O mesmo vídeo. 288 quadros a mais.",
+            "angle_comparison": "Frame counts are sourced. Encode speed was not measured.", "voice": ["Preserve the terse opening."],
             "counterpoint": "Sem estimar tempo de render.", "visual_direction": "A same-duration comparison.",
             "template": "data_story", "media": "both",
             "sources": [{"id": "1", "label": "Fluvie", "date": "", "state": "verified",
@@ -39,7 +44,7 @@ class EditorialTest(unittest.TestCase):
         }
         visual = json.loads((editorial.ROOT / "example/fixtures/data_story.json").read_text())
         self.draft = {
-            "status": "ready", "reason": "", "post": self.plan["hook"],
+            "status": "ready", "reason": "", "post": self.plan["hook"] + " [source:1]",
             "alt_text": "Dois traços. Mesma duração.", "decisions": ["Keep the specific opener."],
             "claim_ids": ["frames"], "template": "data_story", "media": "both",
             "visual_json": json.dumps(visual), "new_sources": [], "new_claims": [],
@@ -58,6 +63,8 @@ class EditorialTest(unittest.TestCase):
             def call(self, role, stage, schema, instructions, context):
                 stages.append((role, stage, copy.deepcopy(context)))
                 value = responses[stage]
+                if isinstance(value, Exception):
+                    raise value
                 editorial.check(value, schema)
                 return value
 
@@ -89,7 +96,7 @@ class EditorialTest(unittest.TestCase):
         self.assertEqual(report["artifacts"][:4], [
             "artifacts/pauta.md", "artifacts/post.md", "artifacts/imagem.png", "artifacts/video.mp4",
         ])
-        self.assertEqual((self.workspace / "artifacts/post.md").read_text().strip(), self.plan["hook"])
+        self.assertEqual((self.workspace / "artifacts/post.md").read_text().strip(), self.plan["hook"] + " [1]")
         pauta = (self.workspace / "artifacts/pauta.md").read_text()
         self.assertIn(self.brief["topic"], pauta)
         self.assertIn(self.brief["briefing_markdown"], pauta)
@@ -99,6 +106,64 @@ class EditorialTest(unittest.TestCase):
         self.assertEqual(backlog.count("## Colchete entre séries"), 1)
         self.assertIn("Opus · plan, Sol · draft", backlog)
         self.assertIn(self.request["acceptance"], backlog)
+
+    def test_blocked_angle_is_researched_and_reviewed_before_drafting(self):
+        blocker = receipt("revise", [{
+            "kind": "angle", "severity": "blocking", "problem": "Weak lead",
+            "evidence": "The source supports a more consequential comparison.",
+        }])
+        revised = dict(self.plan, thesis="The choice affects the number of frames encoded.")
+        with patch.object(editorial, "render", side_effect=self.fake_render):
+            report, stages = self.process({
+                "research": self.plan, "plan": blocker, "plan-angle-revision": revised,
+                "plan-angle-review": receipt("ready"), "draft": self.draft,
+                "draft-review": receipt("ready"),
+            })
+        self.assertEqual([stage for _, stage, _ in stages],
+                         ["research", "plan", "plan-angle-revision", "plan-angle-review",
+                          "draft", "draft-review"])
+        self.assertEqual(stages[4][2]["plan"]["thesis"], revised["thesis"])
+        self.assertEqual(report["status"], "ready_for_review")
+
+    def test_unresolved_angle_stops_before_drafting(self):
+        blocker = receipt("revise", [{
+            "kind": "angle", "severity": "blocking", "problem": "Missing consequence",
+            "evidence": "The revised evidence does not support a useful conclusion.",
+        }])
+        with patch.object(editorial, "render") as render:
+            report, stages = self.process({
+                "research": self.plan, "plan": blocker, "plan-angle-revision": self.plan,
+                "plan-angle-review": blocker,
+            })
+        self.assertEqual(stages[-1][1], "plan-angle-review")
+        self.assertEqual(report["status"], "needs_sources")
+        self.assertNotIn("artifacts/post.md", report["artifacts"])
+        render.assert_not_called()
+
+    def test_post_reuses_source_numbers_and_keeps_urls_in_the_reply(self):
+        draft = dict(self.draft, post="One verified detail. [source:1] Another. [source:1]")
+        with patch.object(editorial, "render", side_effect=self.fake_render):
+            report, _ = self.process({
+                "research": self.plan, "plan": receipt("ready"), "draft": draft,
+                "draft-review": receipt("ready"),
+            })
+        path = self.workspace / "artifacts"
+        self.assertEqual((path / "post.md").read_text(), "One verified detail. [1] Another. [1]\n")
+        self.assertEqual((path / "sources-reply.txt").read_text(),
+                         "[1] Fluvie\nhttps://docs.fluvie.dev/guides/exporting-your-video/\n")
+        self.assertIn("artifacts/sources-reply.txt", report["artifacts"])
+
+    def test_post_with_raw_url_returns_to_writer_before_review(self):
+        bad = dict(self.draft, post="A link. https://example.com [source:1]")
+        with patch.object(editorial, "render", side_effect=self.fake_render):
+            report, stages = self.process({
+                "research": self.plan, "plan": receipt("ready"), "draft": bad,
+                "revision": self.draft, "revision-review": receipt("ready"),
+            })
+        self.assertEqual([stage for _, stage, _ in stages],
+                         ["research", "plan", "draft", "revision", "revision-review"])
+        self.assertIn("instead of URLs", stages[-2][2]["draft_review"]["argument"])
+        self.assertEqual(report["status"], "ready_for_review")
 
     def test_copy_request_still_gets_an_image(self):
         self.brief["requested_outputs"] = ["post"]
@@ -112,6 +177,128 @@ class EditorialTest(unittest.TestCase):
         self.assertIn("artifacts/imagem.png", report["artifacts"])
         self.assertNotIn("artifacts/video.mp4", report["artifacts"])
         self.assertNotIn("artifacts/demandas-gerador.md", report["artifacts"])
+
+    def test_unavailable_visual_still_gets_opus_review_and_delivers_approved_copy(self):
+        plan = dict(self.plan, template="none", media="none")
+        draft = dict(self.draft, template="none", media="none", visual_json="", alt_text="")
+        with patch.object(editorial, "render") as render:
+            report, stages = self.process({
+                "research": plan, "plan": receipt("ready"), "draft": draft,
+                "draft-review": receipt("ready"),
+            })
+        self.assertEqual([stage for _, stage, _ in stages],
+                         ["research", "plan", "draft", "draft-review"])
+        self.assertIn("No suitable visual template", stages[1][2]["visual_issue"])
+        self.assertEqual(stages[-1][0], "opus")
+        self.assertEqual(stages[-1][2]["draft"], draft)
+        self.assertIn("No suitable visual template", stages[-1][2]["visual_issue"])
+        self.assertEqual(report["status"], "needs_visual")
+        self.assertIn("artifacts/post.md", report["artifacts"])
+        self.assertIn("artifacts/demandas-gerador.md", report["artifacts"])
+        self.assertNotIn("artifacts/imagem.png", report["artifacts"])
+        self.assertNotIn("artifacts/visual.json", report["artifacts"])
+        self.assertNotIn("artifacts/alt-text.txt", report["artifacts"])
+        self.assertFalse((self.workspace / ".editorial/approved-artifacts.json").exists())
+        backlog = (self.workspace / "artifacts/demandas-gerador.md").read_text()
+        self.assertIn(plan["visual_direction"], backlog)
+        self.assertIn("Imagem e vídeo", backlog)
+        render.assert_not_called()
+
+    def test_missing_visual_does_not_bypass_editorial_block(self):
+        plan = dict(self.plan, template="none", media="none", generator_requests=[self.request])
+        draft = dict(self.draft, template="none", media="none", visual_json="", alt_text="")
+        block = receipt("revise", [{"kind": "fact", "severity": "blocking",
+                                    "problem": "Wrong denominator", "evidence": "The claim uses a subgroup."}])
+        with patch.object(editorial, "render") as render:
+            report, stages = self.process({
+                "research": plan, "plan": receipt("ready"), "draft": draft,
+                "draft-review": block, "revision": draft, "revision-review": block,
+            })
+        self.assertEqual(stages[-1][1], "revision-review")
+        self.assertEqual(report["status"], "needs_sources")
+        self.assertNotIn("artifacts/post.md", report["artifacts"])
+        self.assertIn("artifacts/demandas-gerador.md", report["artifacts"])
+        render.assert_not_called()
+
+    def test_exhausted_visual_repair_records_a_demand(self):
+        draft = dict(self.draft, visual_json="[]")
+        with patch.object(editorial, "render") as render:
+            report, stages = self.process({
+                "research": self.plan, "plan": receipt("ready"), "draft": draft,
+                "draft-review-format": draft, "draft-review": receipt("ready"),
+            })
+        self.assertEqual(stages[-2][1], "draft-review-format")
+        self.assertIn("visual must be a JSON object", stages[-1][2]["visual_issue"])
+        self.assertEqual(report["status"], "needs_visual")
+        self.assertIn("artifacts/demandas-gerador.md", report["artifacts"])
+        render.assert_not_called()
+
+    def test_unavailable_plan_can_use_an_installed_composition(self):
+        visual = json.loads(
+            (editorial.ROOT / "example/fixtures/data_story_composition.json").read_text()
+        )
+        source = dict(self.plan["sources"][0], id="sample")
+        claim = dict(self.plan["claims"][0], text="Illustrative shares total 100.",
+                     source_ids=["sample"])
+        plan = dict(self.plan, template="none", media="none", sources=[source],
+                    claims=[claim])
+        draft = dict(self.draft, visual_json=json.dumps(visual),
+                     post="Four shares of an illustrative budget. [source:sample]")
+        with patch.object(editorial, "render", side_effect=self.fake_render) as render:
+            report, stages = self.process({
+                "research": plan, "plan": receipt("ready"),
+                "draft": draft, "draft-review": receipt("ready"),
+            })
+        self.assertEqual(stages[-1][2]["visual_issue"], "")
+        self.assertEqual(report["status"], "ready_for_review")
+        self.assertEqual(render.call_args.args[0], visual)
+        self.assertIn("artifacts/demandas-gerador.md", report["artifacts"])
+
+        visual["series"][0]["values"][-1] -= 1
+        with self.assertRaisesRegex(editorial.EditorialError, "positive shares totaling 100"):
+            editorial.checked_draft(dict(draft, visual_json=json.dumps(visual)), plan)
+
+    def test_catalog_contract_is_repaired_before_opus(self):
+        catalog = json.loads((editorial.ROOT / "example/fixtures/editorial_catalog.json").read_text())
+        self.brief["requested_outputs"] = ["post"]
+        valid = dict(self.draft, template="editorial_catalog", media="image",
+                     visual_json=json.dumps(catalog))
+        invalid = dict(catalog, tiles=catalog["tiles"][:4], order=catalog["order"][:4])
+        with patch.object(editorial, "render", side_effect=self.fake_render):
+            report, stages = self.process({
+                "research": dict(self.plan, template="editorial_catalog", media="image"),
+                "plan": receipt("ready"),
+                "draft": dict(valid, visual_json=json.dumps(invalid)),
+                "draft-review-format": valid,
+                "draft-review": receipt("ready"),
+            })
+        self.assertEqual(report["status"], "ready_for_review")
+        self.assertIn("$.tiles: expected 8–12 entries", stages[-2][2]["validation_error"])
+        self.assertEqual(stages[-1][2]["draft"], valid)
+        long_title = copy.deepcopy(catalog)
+        long_title["tiles"][0]["title"] = "a" * 23
+        with self.assertRaisesRegex(editorial.EditorialError, r"tiles\[0\]\.title"):
+            editorial.checked_draft(dict(valid, visual_json=json.dumps(long_title)), self.plan)
+
+    def test_matrix_checks_verified_sources_and_preserves_requests_on_render_failure(self):
+        matrix = (editorial.ROOT / "example/fixtures/editorial_matrix.json").read_text()
+        self.brief["requested_outputs"] = ["post"]
+        draft = dict(self.draft, template="editorial_matrix", media="image", visual_json=matrix,
+                     post=self.plan["hook"] + " [source:S1]")
+        with self.assertRaisesRegex(editorial.EditorialError, "verified source IDs"):
+            editorial.checked_draft(draft, self.plan)
+        sources = [dict(self.plan["sources"][0], id=f"S{i}") for i in range(1, 7)]
+        plan = dict(self.plan, template="editorial_matrix", media="image", sources=sources)
+        plan["claims"] = [dict(self.plan["claims"][0], source_ids=["S1"])]
+        with patch.object(editorial, "render", side_effect=CalledProcessError(1, "renderer")):
+            with self.assertRaises(CalledProcessError):
+                self.process({
+                    "research": plan, "plan": receipt("ready"), "draft": draft,
+                    "draft-review": receipt("ready", generator_requests=[self.request]),
+                })
+        backlog = (self.workspace / "artifacts/demandas-gerador.md").read_text()
+        self.assertIn("Opus · draft-review", backlog)
+        self.assertIn(self.request["acceptance"], backlog)
 
     def test_voice_block_keeps_a_private_review_packet_without_deliverable(self):
         block = receipt("revise", [{"kind": "voice", "severity": "blocking",
@@ -133,6 +320,71 @@ class EditorialTest(unittest.TestCase):
         self.assertIn("**Critério de aceite** · A detalhar.", backlog)
         render.assert_not_called()
 
+    def test_render_contract_failure_repairs_visual_without_rewriting_post(self):
+        alternate = dict(self.draft, post="Changed post must be ignored")
+        failure = editorial.VisualRenderError("$.title: expected shorter copy", repairable=True)
+        with patch.object(editorial, "render", side_effect=[failure, None]) as render:
+            (self.workspace / "artifacts").mkdir()
+            (self.workspace / "artifacts/imagem.png").write_bytes(b"png")
+            (self.workspace / "artifacts/video.mp4").write_bytes(b"mp4")
+            report, stages = self.process({
+                "research": self.plan, "plan": receipt("ready"), "draft": self.draft,
+                "draft-review": receipt("ready"), "draft-review-format": alternate,
+                "draft-review-format-review": receipt("ready"),
+            })
+        self.assertEqual(report["status"], "ready_for_review")
+        self.assertEqual(render.call_count, 2)
+        self.assertEqual(render.call_args.args[1]["post"], self.draft["post"])
+        self.assertEqual(stages[-1][1], "draft-review-format-review")
+
+    def test_preflight_and_format_writer_timeouts_still_allow_opus_review(self):
+        with patch.object(editorial, "checked_draft",
+                          side_effect=TimeoutExpired("visual preflight", 30)):
+            report, stages = self.process({
+                "research": self.plan, "plan": receipt("ready"), "draft": self.draft,
+                "draft-review-format": TimeoutExpired("format writer", 420),
+                "draft-review": receipt("ready"),
+            })
+        self.assertEqual(stages[-1][:2], ("opus", "draft-review"))
+        self.assertIn("visual preflight", stages[-1][2]["visual_issue"])
+        self.assertIn("format writer", stages[-1][2]["visual_issue"])
+        self.assertEqual(report["status"], "needs_visual")
+        self.assertIn("artifacts/post.md", report["artifacts"])
+        self.assertIn("artifacts/demandas-gerador.md", report["artifacts"])
+
+    def test_render_contract_repair_preflight_timeout_preserves_approved_copy(self):
+        failure = editorial.VisualRenderError("$.title: expected shorter copy", repairable=True)
+        visual = json.loads(self.draft["visual_json"])
+        with patch.object(editorial, "render", side_effect=failure) as render, patch.object(
+            editorial, "checked_draft", side_effect=[visual, TimeoutExpired("visual preflight", 30)]
+        ):
+            report, stages = self.process({
+                "research": self.plan, "plan": receipt("ready"), "draft": self.draft,
+                "draft-review": receipt("ready"), "draft-review-format": self.draft,
+            })
+        self.assertEqual(stages[-2][:2], ("opus", "draft-review"))
+        self.assertEqual(report["status"], "needs_visual")
+        self.assertIn("visual preflight", report["summary"])
+        self.assertIn("artifacts/post.md", report["artifacts"])
+        self.assertIn("artifacts/demandas-gerador.md", report["artifacts"])
+        self.assertIn("artifacts/visual.json", report["artifacts"])
+        render.assert_called_once()
+
+    def test_unavailable_renderer_preserves_review_packet(self):
+        with patch.object(editorial, "render",
+                          side_effect=editorial.VisualRenderError("Renderer unavailable")):
+            report, _ = self.process({
+                "research": self.plan, "plan": receipt("ready"), "draft": self.draft,
+                "draft-review": receipt("ready"),
+            })
+        self.assertEqual(report["status"], "needs_visual")
+        self.assertIn("Renderer unavailable", report["summary"])
+        self.assertIn("artifacts/post.md", report["artifacts"])
+        self.assertIn("artifacts/demandas-gerador.md", report["artifacts"])
+        self.assertIn("artifacts/research-notes.md", report["artifacts"])
+        self.assertIn("artifacts/visual.json", report["artifacts"])
+        self.assertNotIn("artifacts/imagem.png", report["artifacts"])
+
     def test_empty_optional_section_and_bad_source_reference(self):
         visual = json.loads(self.draft["visual_json"])
         visual["timeline"] = []
@@ -141,6 +393,24 @@ class EditorialTest(unittest.TestCase):
         visual["chart_source"] = "[invented]"
         with self.assertRaises(editorial.EditorialError):
             editorial.checked_graph(visual, self.plan)
+
+    def test_png_alt_text_preserves_pixels_and_replaces_description(self):
+        def chunk(kind, payload):
+            body = kind + payload
+            return struct.pack(">I", len(payload)) + body + struct.pack(">I", zlib.crc32(body))
+
+        header = chunk(b"IHDR", struct.pack(">IIBBBBB", 1, 1, 8, 2, 0, 0, 0))
+        pixels = chunk(b"IDAT", zlib.compress(b"\0\xff\xff\xff"))
+        end = chunk(b"IEND", b"")
+        path = self.workspace / "poster.png"
+        path.write_bytes(SIGNATURE + header + pixels + end)
+        embed_alt_text(path, "old heading")
+        embed_alt_text(path, "1×, média")
+        encoded = path.read_bytes()
+        self.assertEqual(encoded.count(DESCRIPTION), 1)
+        self.assertIn(chunk(b"iTXt", DESCRIPTION + b"\0\0\0\0" + "1×, média".encode()), encoded)
+        self.assertEqual(encoded[:len(SIGNATURE + header + pixels)], SIGNATURE + header + pixels)
+        self.assertTrue(encoded.endswith(end))
 
 
 if __name__ == "__main__":

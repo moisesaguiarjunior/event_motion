@@ -29,3 +29,10 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  fonts:
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter.ttf
+  assets:
+    - assets/cha_de_estrelas.png
+    - assets/jardim_sonho.png

@@ -41,6 +41,9 @@ Use a single line per field. Keep tile titles to 22 characters and notes to 43 c
 Aim for at most five words per note. Give a complete action that matches the tile title.
 For example, a tile called "Fontes confiáveis" could say "Confira os estudos originais."
 Only include a palette or a tile accent when the brief calls for one.
+Use footer for a scope note of up to 110 characters and sources for up to seven
+source labels of up to 36 characters each, including the bracketed IDs used in
+the tile notes. Include these optional fields only when the brief supports them.
 The diagrams are illustrative. Use supplied facts for copy and avoid invented measurements.''',
       schema: schema,
       validate: (draft) {

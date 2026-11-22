@@ -1,0 +1,50 @@
+{
+  "chart_kind": "paired_dot",
+  "title": "What companies planned to spend on AI",
+  "subtitle": "Survey illustration comparing planned and reported spending against the 2025 baseline.",
+  "chart_title": "Planned versus reported spending",
+  "unit": "Multiple of 2025 spending",
+  "chart_source": "[survey]",
+  "labels": [
+    "Mean",
+    "Median"
+  ],
+  "series": [
+    {
+      "name": "Planned",
+      "values": [
+        1.9,
+        1.8
+      ]
+    },
+    {
+      "name": "Reported",
+      "values": [
+        4.7,
+        2.2
+      ]
+    }
+  ],
+  "y_min": 0,
+  "y_max": 5,
+  "axis_suffix": "×",
+  "reference_lines": [
+    {
+      "value": 1,
+      "label": "1× = 2025"
+    }
+  ],
+  "annotation": {
+    "series_index": 1,
+    "label_index": 0,
+    "note": "The reported mean was higher than the reported median."
+  },
+  "evidence_title": "",
+  "evidence": [],
+  "timeline_title": "",
+  "timeline": [],
+  "sources": [
+    "[survey] Self-reported survey figures · illustrative comparison"
+  ],
+  "alt_text": "Two horizontal rows share a scale of zero to five times 2025 spending. Mean planned 1.9× and reported 4.7×. Median planned 1.8× and reported 2.2×. Values are self-reported."
+}

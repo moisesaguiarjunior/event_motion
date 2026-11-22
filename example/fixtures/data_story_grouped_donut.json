@@ -1,0 +1,43 @@
+{
+  "chart_kind": "composition",
+  "title": "Where the extra $100 for enterprise AI came from",
+  "subtitle": "Incremental global enterprise AI deployment spending, 2026.",
+  "chart_title": "Sources of spending and who received it",
+  "unit": "Share of added spending",
+  "chart_source": "[menlo]",
+  "labels": [
+    "New budgets",
+    "Stayed with established vendors",
+    "Went to AI-native vendors",
+    "Other sources (approx.)"
+  ],
+  "series": [
+    {
+      "name": "Share",
+      "values": [
+        55,
+        13,
+        9,
+        23
+      ]
+    }
+  ],
+  "annotation": {
+    "series_index": 0,
+    "label_index": 1,
+    "note": "The two teal slices add up to 22% from existing software budgets."
+  },
+  "evidence_title": "",
+  "evidence": [],
+  "timeline_title": "",
+  "timeline": [],
+  "sources": [
+    "[menlo] Menlo Ventures · November 2026 · global enterprise AI deployment"
+  ],
+  "slice_groups": [
+    null,
+    "Software budgets",
+    "Software budgets",
+    null
+  ]
+}

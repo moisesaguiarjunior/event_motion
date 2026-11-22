@@ -1,0 +1,16 @@
+{
+  "chart_kind": "composition",
+  "title": "Where the extra budget came from",
+  "subtitle": "Illustrative spending mix for every 100 dollars of additional investment.",
+  "chart_title": "Sources of incremental spending",
+  "unit": "Share of additional spend",
+  "chart_source": "[sample]",
+  "labels": ["New budget", "Retained by existing vendors", "Moved to new vendors", "Other sources"],
+  "series": [{"name": "Share", "values": [55, 13, 9, 23]}],
+  "annotation": {"label_index": 0, "series_index": 0, "note": "Existing software budgets accounted for 22% in total."},
+  "evidence_title": "",
+  "evidence": [],
+  "timeline_title": "",
+  "timeline": [],
+  "sources": ["[sample] Illustrative figures for rendering only"]
+}

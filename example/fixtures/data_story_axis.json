@@ -1,0 +1,52 @@
+{
+  "chart_kind": "line",
+  "title": "A fixed scale for spending estimates",
+  "subtitle": "Illustrative forecasts across three reporting dates.",
+  "chart_title": "Forecasts on a common scale",
+  "unit": "Multiple of 2025 spending",
+  "chart_source": "[survey]",
+  "labels": [
+    "Apr",
+    "Aug",
+    "Nov"
+  ],
+  "series": [
+    {
+      "name": "Plan",
+      "values": [
+        1.9,
+        2.0,
+        2.2
+      ]
+    },
+    {
+      "name": "Forecast",
+      "values": [
+        2.2,
+        3.8,
+        4.7
+      ]
+    }
+  ],
+  "y_min": 0,
+  "y_max": 5,
+  "axis_suffix": "×",
+  "reference_lines": [
+    {
+      "value": 1,
+      "label": "1× = 2025"
+    }
+  ],
+  "annotation": {
+    "series_index": 1,
+    "label_index": 2,
+    "note": "The scale remains fixed at 0–5× across updates."
+  },
+  "evidence_title": "",
+  "evidence": [],
+  "timeline_title": "",
+  "timeline": [],
+  "sources": [
+    "[survey] Illustrative data · 2025 reference"
+  ]
+}

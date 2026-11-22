@@ -5,7 +5,10 @@ import 'package:event_motion/event_motion.dart';
 import 'package:flutter/widgets.dart';
 import 'package:fluvie/fluvie.dart' as video;
 
+import 'src/data_story_document.dart';
 import 'src/motion_clock.dart';
+
+part 'src/data_story_charts.dart';
 
 const _ink = Color(0xFF182A23);
 const _paper = Color(0xFFF4F1E7);
@@ -18,10 +21,11 @@ typedef _Detail = ({String label, String title, String note, String source});
 
 video.Video build(String input, {required bool animated}) {
   final data = jsonDecode(input) as Map<String, dynamic>;
+  final chart = DataStoryChart.parse(data);
   final frames = animated ? 192 : 1;
   return video.Video(
-    width: 1440,
-    height: 1800,
+    width: chart.isCompactExport ? 1080 : 1440,
+    height: chart.isCompactExport ? 1350 : 1800,
     fps: 24,
     poster: video.Time.frames(frames - 1),
     scenes: [
@@ -44,6 +48,8 @@ video.Video build(String input, {required bool animated}) {
                       : 1;
                   return _Story(
                     data,
+                    chart,
+                    animated: animated,
                     chart: reveal(480, 1450),
                     evidence: reveal(2450, 420),
                     timeline: reveal(4150, 420),
@@ -60,13 +66,17 @@ video.Video build(String input, {required bool animated}) {
 
 class _Story extends StatelessWidget {
   const _Story(
-    this.data, {
+    this.data,
+    this.options, {
+    required this.animated,
     required this.chart,
     required this.evidence,
     required this.timeline,
   });
 
   final Map<String, dynamic> data;
+  final DataStoryChart options;
+  final bool animated;
   final double chart;
   final double evidence;
   final double timeline;
@@ -93,6 +103,7 @@ class _Story extends StatelessWidget {
         ),
     ];
     final annotation = data['annotation'] as Map<String, dynamic>;
+    final labels = (data['labels'] as List<dynamic>).cast<String>();
     return ColoredBox(
       color: _paper,
       child: Padding(
@@ -130,39 +141,68 @@ class _Story extends StatelessWidget {
                       const SizedBox(height: 3),
                       _text('${data['unit']}  ·  ${data['chart_source']}', 9.5),
                       const SizedBox(height: 3),
-                      Wrap(
-                        spacing: 12,
-                        children: [
-                          for (final (index, item) in series.indexed)
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Container(
-                                  width: 10,
-                                  height: 2,
-                                  color: _colors[index],
-                                ),
-                                const SizedBox(width: 3),
-                                _text(
-                                  item.name,
-                                  10,
-                                  bold: true,
-                                  color: _colors[index],
-                                ),
-                              ],
-                            ),
-                        ],
-                      ),
-                      Expanded(
-                        child: CustomPaint(
-                          painter: _Plot(
-                            labels: (data['labels'] as List<dynamic>)
-                                .cast<String>(),
-                            series: series,
-                            progress: chart,
-                            annotation: annotation,
-                          ),
+                      if (options.kind == 'paired_dot')
+                        _PairedLegend(series)
+                      else if (options.kind == 'line')
+                        Wrap(
+                          spacing: 12,
+                          children: [
+                            for (final (index, item) in series.indexed)
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    width: 10,
+                                    height: 2,
+                                    color: _colors[index],
+                                  ),
+                                  const SizedBox(width: 3),
+                                  _text(
+                                    item.name,
+                                    10,
+                                    bold: true,
+                                    color: _colors[index],
+                                  ),
+                                ],
+                              ),
+                          ],
                         ),
+                      Expanded(
+                        child: switch (options.kind) {
+                          'composition' => _Composition(
+                            labels: labels,
+                            values: series.single.values,
+                            animated: animated,
+                            sliceGroups: options.sliceGroups,
+                          ),
+                          'stacked_bar' => Opacity(
+                            opacity: chart,
+                            child: CustomPaint(
+                              painter: _StackedBar(
+                                labels,
+                                series.single.values,
+                                options,
+                              ),
+                            ),
+                          ),
+                          'paired_dot' => CustomPaint(
+                            painter: _PairedDots(
+                              labels,
+                              series,
+                              options.axis!,
+                              chart,
+                            ),
+                          ),
+                          _ => CustomPaint(
+                            painter: _Plot(
+                              labels: labels,
+                              series: series,
+                              progress: chart,
+                              annotation: annotation,
+                              axis: options.axis!,
+                            ),
+                          ),
+                        },
                       ),
                       Opacity(
                         opacity: chart,
@@ -280,32 +320,116 @@ class _Details extends StatelessWidget {
   );
 }
 
+class _Composition extends StatelessWidget {
+  const _Composition({
+    required this.labels,
+    required this.values,
+    required this.animated,
+    required this.sliceGroups,
+  });
+
+  final List<String> labels;
+  final List<num> values;
+  final bool animated;
+  final List<String?> sliceGroups;
+
+  @override
+  Widget build(BuildContext context) {
+    const fallback = video.FluvieTokens.fallback();
+    final (colors, groups) = _sliceColors(sliceGroups);
+    final tokens = colors.isEmpty
+        ? fallback
+        : fallback.copyWith(palette: video.ChartPalette(colors));
+    final parts = Map<String, num>.fromIterables(labels, values);
+    return Column(
+      children: [
+        Expanded(
+          child: video.FluvieTokensScope(
+            tokens: tokens,
+            child: video.Chart.donut(
+              data: parts,
+              reveal: video.Time.frames(animated ? 46 : 0),
+            ),
+          ),
+        ),
+        for (final (index, label) in labels.indexed)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 5),
+            child: Row(
+              children: [
+                Container(
+                  width: 11,
+                  height: 11,
+                  color: tokens.palette.colorAt(index),
+                ),
+                const SizedBox(width: 8),
+                Expanded(child: _text(label, 13, lines: 2)),
+                const SizedBox(width: 8),
+                _text('${values[index]}%', 14, bold: true),
+              ],
+            ),
+          ),
+        if (groups.isNotEmpty)
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Wrap(
+              spacing: 12,
+              runSpacing: 3,
+              children: [
+                for (final group in groups.entries)
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (final color in group.value)
+                        SizedBox(
+                          width: 7,
+                          height: 8,
+                          child: ColoredBox(color: color),
+                        ),
+                      const SizedBox(width: 5),
+                      _text(group.key, 10, bold: true),
+                    ],
+                  ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+}
+
 class _Plot extends CustomPainter {
   const _Plot({
     required this.labels,
     required this.series,
     required this.progress,
     required this.annotation,
+    required this.axis,
   });
 
   final List<String> labels;
   final List<_Series> series;
   final double progress;
   final Map<String, dynamic> annotation;
+  final ChartAxis axis;
 
   @override
   void paint(Canvas canvas, Size size) {
     if (size.height <= 32 || size.width <= 80) return;
-    final values = series.expand((s) => s.values);
-    final low = math.min(0, values.reduce(math.min)).toDouble();
-    final high = math.max(0, values.reduce(math.max)).toDouble();
-    final span = math.max(high - low, .0001);
+    final low = axis.minimum;
+    final span = axis.maximum - low;
     final plot = Rect.fromLTRB(35, 7, size.width - 21, size.height - 18);
     Offset point(int index, num value) => Offset(
       plot.left + plot.width * index / (labels.length - 1),
       plot.bottom - plot.height * (value - low) / span,
     );
-    final ticks = plot.height >= 76 ? 4 : 2;
+    final ticks = plot.height < 76
+        ? 2
+        : axis.explicitBounds && span == span.round() && span >= 2 && span <= 6
+        ? span.round()
+        : 4;
+    String axisLabel(double value) =>
+        '${axis.explicitBounds ? _shortNumber(value) : _number(value)}${axis.suffix}';
     for (var tick = 0; tick <= ticks; tick++) {
       final value = low + span * tick / ticks;
       final y = point(0, value).dy;
@@ -316,13 +440,30 @@ class _Plot extends CustomPainter {
       );
       _label(
         canvas,
-        _number(value),
+        axisLabel(value),
         Offset(plot.left - 5, y),
         rightAligned: true,
       );
     }
     for (final (index, label) in labels.indexed) {
       _label(canvas, label, Offset(point(index, low).dx, plot.bottom + 9));
+    }
+    final references = axis.referenceLines.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    var labelY = plot.top;
+    for (final reference in references) {
+      final y = point(0, reference.value).dy;
+      _dash(canvas, Offset(plot.left, y), Offset(plot.right, y));
+      labelY = math.max(labelY, y - 7);
+      _chartText(
+        canvas,
+        reference.label,
+        Offset(plot.right - 3, labelY),
+        alignment: 1,
+        size: 9,
+        paper: _panel,
+      );
+      labelY += 12;
     }
     if (progress == 0) return;
     canvas.save();
@@ -365,7 +506,7 @@ class _Plot extends CustomPainter {
     );
     _label(
       canvas,
-      _number(value.toDouble()),
+      axisLabel(value.toDouble()),
       marked +
           Offset(
             labelIndex == labels.length - 1 ? -14 : 14,
@@ -409,5 +550,6 @@ class _Plot extends CustomPainter {
       progress != oldDelegate.progress ||
       labels != oldDelegate.labels ||
       series != oldDelegate.series ||
-      annotation != oldDelegate.annotation;
+      annotation != oldDelegate.annotation ||
+      axis != oldDelegate.axis;
 }

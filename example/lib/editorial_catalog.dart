@@ -128,6 +128,7 @@ class _Catalog extends StatelessWidget {
   Widget build(BuildContext context) {
     final tiles = document.tiles;
     final dense = tiles.length > 8;
+    final hasFooter = document.footer != null || document.sources.isNotEmpty;
     final columns = dense ? 3 : 2;
     final rows = (tiles.length + columns - 1) ~/ columns;
     final done = document.order
@@ -137,19 +138,26 @@ class _Catalog extends StatelessWidget {
         .where((tile) => frame.statusOf(tile.id) == MotionStatus.active)
         .firstOrNull;
     return Padding(
-      padding: EdgeInsets.fromLTRB(28, dense ? 23 : 28, 28, 23),
+      padding: EdgeInsets.fromLTRB(
+        28,
+        hasFooter ? 10 : (dense ? 23 : 28),
+        28,
+        hasFooter ? 10 : 23,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 44,
-            height: 5,
-            decoration: BoxDecoration(
-              color: colors.accent,
-              borderRadius: BorderRadius.circular(3),
+          if (!hasFooter) ...[
+            Container(
+              width: 44,
+              height: 5,
+              decoration: BoxDecoration(
+                color: colors.accent,
+                borderRadius: BorderRadius.circular(3),
+              ),
             ),
-          ),
-          SizedBox(height: dense ? 10 : 13),
+            SizedBox(height: dense ? 10 : 13),
+          ],
           Text(
             document.title,
             maxLines: 2,
@@ -163,7 +171,7 @@ class _Catalog extends StatelessWidget {
               letterSpacing: -1.6,
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: hasFooter ? 5 : 8),
           Text(
             document.subtitle,
             maxLines: 2,
@@ -175,7 +183,7 @@ class _Catalog extends StatelessWidget {
               height: 1.2,
             ),
           ),
-          SizedBox(height: dense ? 13 : 18),
+          SizedBox(height: hasFooter ? 8 : (dense ? 13 : 18)),
           for (var row = 0; row < rows; row++) ...[
             if (row > 0) const SizedBox(height: 8),
             Expanded(
@@ -199,40 +207,97 @@ class _Catalog extends StatelessWidget {
               ),
             ),
           ],
-          const SizedBox(height: 13),
+          SizedBox(height: hasFooter ? 8 : 13),
           Container(height: 1, color: colors.rule),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  active == null
-                      ? '$done de ${tiles.length} etapas'
-                      : 'Em foco · ${active.title}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: colors.ink,
-                    fontFamily: 'Roboto',
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
+          SizedBox(height: hasFooter ? 5 : 10),
+          if (hasFooter)
+            _CatalogFooter(document, colors)
+          else
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    active == null
+                        ? '$done de ${tiles.length} etapas'
+                        : 'Em foco · ${active.title}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: colors.ink,
+                      fontFamily: 'Roboto',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
-              ),
-              for (var index = 0; index < tiles.length; index++)
-                Container(
-                  width: 7,
-                  height: 3,
-                  margin: const EdgeInsets.only(left: 3),
-                  decoration: BoxDecoration(
-                    color: index < done ? colors.accent : colors.rule,
-                    borderRadius: BorderRadius.circular(3),
+                for (var index = 0; index < tiles.length; index++)
+                  Container(
+                    width: 7,
+                    height: 3,
+                    margin: const EdgeInsets.only(left: 3),
+                    decoration: BoxDecoration(
+                      color: index < done ? colors.accent : colors.rule,
+                      borderRadius: BorderRadius.circular(3),
+                    ),
                   ),
-                ),
-            ],
-          ),
+              ],
+            ),
         ],
       ),
+    );
+  }
+}
+
+class _CatalogFooter extends StatelessWidget {
+  const _CatalogFooter(this.document, this.colors);
+
+  final CatalogDocument document;
+  final _Colors colors;
+
+  @override
+  Widget build(BuildContext context) {
+    final style = TextStyle(
+      color: colors.ink,
+      fontFamily: 'Inter',
+      fontSize: 13,
+      height: 1.1,
+    );
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        Widget fitBlock(Widget child, double maxHeight) => ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: maxHeight),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: SizedBox(width: constraints.maxWidth, child: child),
+          ),
+        );
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (document.footer case final note?)
+              fitBlock(
+                Text(note, style: style.copyWith(fontWeight: FontWeight.w600)),
+                30,
+              ),
+            if (document.footer != null && document.sources.isNotEmpty)
+              const SizedBox(height: 4),
+            if (document.sources.isNotEmpty)
+              fitBlock(
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 2,
+                  children: [
+                    for (final label in document.sources)
+                      Text(label, style: style.copyWith(fontSize: 12)),
+                  ],
+                ),
+                54,
+              ),
+          ],
+        );
+      },
     );
   }
 }
@@ -269,6 +334,7 @@ class _Tile extends StatelessWidget {
         : Color(tile.accent!);
     final titleColor = tile.accent == null ? color : colors.ink;
     return DecoratedBox(
+      key: ValueKey(tile.id),
       decoration: BoxDecoration(
         color: active
             ? Color.alphaBlend(color.withValues(alpha: 0.12), colors.focus)

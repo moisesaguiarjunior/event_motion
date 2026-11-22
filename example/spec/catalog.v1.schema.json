@@ -9,6 +9,12 @@
     "title": {"type": "string", "minLength": 1, "maxLength": 40},
     "subtitle": {"type": "string", "minLength": 1, "maxLength": 88},
     "palette": {"enum":["paper","blueprint","rose"]},
+    "footer": {"type": "string", "minLength": 1, "maxLength": 110},
+    "sources": {
+      "type": "array",
+      "maxItems": 7,
+      "items": {"type": "string", "minLength": 1, "maxLength": 36}
+    },
     "tiles": {"type":"array", "minItems":8, "maxItems":12, "items":{"$ref":"#/$defs/tile"}},
     "order": {"type":"array", "minItems":8, "maxItems":12, "uniqueItems":true, "items":{"$ref":"#/$defs/id"}}
   },

@@ -1,0 +1,87 @@
+{
+  "version": 1,
+  "title": "Who handles the purchase?",
+  "columns": [
+    "Date",
+    "Change",
+    "Cloud role",
+    "Operator role"
+  ],
+  "rows": [
+    {
+      "date": "2025-11-30",
+      "change": "Search launches",
+      "cloud": "Discovery and recommendations",
+      "operator": "Varies by listing",
+      "source_ids": [
+        "S1"
+      ]
+    },
+    {
+      "date": "2026-10-23",
+      "change": "Two service routes",
+      "cloud": "Bills for both routes",
+      "operator": "Vendor processes data on its route",
+      "operator_cloud": "Cloud processes on its route",
+      "source_ids": [
+        "S2"
+      ]
+    },
+    {
+      "date": "2026-11-09",
+      "change": "New marketplace listing",
+      "cloud": "Purchase and billing",
+      "operator": "Vendor processes data",
+      "operator_cloud": "Cloud is a subprocessor",
+      "source_ids": [
+        "S3",
+        "S4"
+      ]
+    },
+    {
+      "date": "2026-11-19",
+      "change": "Workflow expands",
+      "cloud": "Seller evidence, checkout and deployment for supported listings",
+      "operator": "Varies by listing",
+      "source_ids": [
+        "S5",
+        "S6"
+      ]
+    }
+  ],
+  "footer": "Illustrative sample. Rows represent announcements.",
+  "sources": [
+    {
+      "id": "S1",
+      "label": "Search launch"
+    },
+    {
+      "id": "S2",
+      "label": "Service routes"
+    },
+    {
+      "id": "S3",
+      "label": "Vendor announcement"
+    },
+    {
+      "id": "S4",
+      "label": "Listing details"
+    },
+    {
+      "id": "S5",
+      "label": "Workflow expansion"
+    },
+    {
+      "id": "S6",
+      "label": "Buyer guide"
+    },
+    {
+      "id": "SEC",
+      "label": "Anthropic prospectus"
+    }
+  ],
+  "hero_stat": {
+    "value": "About 44%",
+    "caption": "of Anthropic’s total revenue via cloud marketplaces across providers, Jan.–Sept. 2026 [SEC]"
+  }
+}

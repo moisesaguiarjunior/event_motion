@@ -3,12 +3,16 @@ import 'dart:io';
 import 'package:alchemist/alchemist.dart' show loadFonts;
 import 'package:event_motion_example/agent_pipeline.dart' as pipeline;
 import 'package:event_motion_example/card_sequence.dart' as sequence;
+import 'package:event_motion_example/cha_de_estrelas.dart' as cha;
 import 'package:event_motion_example/comparison.dart' as comparison;
 import 'package:event_motion_example/data_story.dart' as data_story;
 import 'package:event_motion_example/editorial_catalog.dart' as editorial;
+import 'package:event_motion_example/editorial_matrix.dart' as matrix;
 import 'package:event_motion_example/hybrid.dart' as hybrid;
+import 'package:event_motion_example/jardim_sonho.dart' as jardim;
 import 'package:event_motion_example/src/card_document.dart';
 import 'package:event_motion_example/src/catalog_document.dart';
+import 'package:event_motion_example/src/matrix_document.dart';
 import 'package:event_motion_example/src/team_document.dart';
 import 'package:event_motion_example/src/workflow_spec.dart';
 import 'package:event_motion_example/workshop_team.dart' as workshop;
@@ -34,6 +38,8 @@ void main() {
   String input(String fallback) =>
       File(editorialInput ?? 'fixtures/$fallback.json').readAsStringSync();
   for (final (name, build) in [
+    ('jardim_sonho', () => jardim.build()),
+    ('cha_de_estrelas', () => cha.build()),
     (
       'agent_pipeline',
       () => pipeline.build(
@@ -67,6 +73,10 @@ void main() {
       () => editorial.build(CatalogDocument.parse(input('editorial_catalog'))),
     ),
     (
+      'editorial_matrix',
+      () => matrix.build(MatrixDocument.parse(input('editorial_matrix'))),
+    ),
+    (
       'data_story',
       () => data_story.build(input('data_story'), animated: false),
     ),
@@ -97,6 +107,7 @@ void main() {
       'comparison',
       'character_poster',
       'data_story',
+      'editorial_matrix',
     }.contains(name);
     final formats = imageOnly ? 'PNG' : 'MP4 and PNG';
     testWidgets('exports $name as $formats', skip: !_render, (tester) async {
@@ -118,6 +129,18 @@ Future<void> _export(
 }) async {
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
+  final asset = switch (name) {
+    'jardim_sonho' => 'assets/jardim_sonho.png',
+    'cha_de_estrelas' => 'assets/cha_de_estrelas.png',
+    _ => null,
+  };
+  if (asset != null) {
+    await tester.pumpWidget(
+      const Directionality(textDirection: TextDirection.ltr, child: SizedBox()),
+    );
+    final context = tester.element(find.byType(SizedBox));
+    await tester.runAsync(() => precacheImage(AssetImage(asset), context));
+  }
   final output = Directory.systemTemp.createTempSync('event-motion-render-');
   addTearDown(() => output.deleteSync(recursive: true));
   final manifest = await renderVideo(
@@ -141,6 +164,7 @@ Future<void> _export(
       'workflow' => Platform.environment['EVENT_MOTION_WORKFLOW_OUT'],
       'hybrid' => Platform.environment['EVENT_MOTION_HYBRID_OUT'],
       'editorial_catalog' ||
+      'editorial_matrix' ||
       'character_poster' ||
       'character_dashboard' ||
       'data_story' ||
