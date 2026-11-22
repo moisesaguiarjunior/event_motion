@@ -66,6 +66,31 @@ void main() {
     );
   });
 
+  test('catalogs accept an optional palette and per-tile RGB accent', () {
+    final input = _fixture('editorial_catalog');
+    expect(CatalogDocument.fromJson(input).palette, CatalogPalette.paper);
+    input['palette'] = 'blueprint';
+    final first =
+        (input['tiles'] as List<dynamic>).first as Map<String, dynamic>;
+    first['accent'] = '#5d356f';
+    final styled = CatalogDocument.fromJson(input);
+    expect(styled.palette, CatalogPalette.blueprint);
+    expect(styled.tiles.first.accent, 0xff5d356f);
+    expect(styled.tiles[1].accent, isNull);
+
+    first['accent'] = '#abc';
+    expect(
+      () => CatalogDocument.fromJson(input),
+      throwsA(_errorAt(r'$.tiles[0].accent')),
+    );
+    first.remove('accent');
+    input['palette'] = 'unknown';
+    expect(
+      () => CatalogDocument.fromJson(input),
+      throwsA(_errorAt(r'$.palette')),
+    );
+  });
+
   test(
     'the same team has distinct characters and a fixed activation order',
     () {
@@ -74,6 +99,9 @@ void main() {
       final lead = input['lead'] as Map<String, dynamic>;
       TeamDocument parse() => TeamDocument.parse(jsonEncode(input));
       final document = parse();
+      expect(document.palette, WorkshopPalette.forest);
+      expect(document.pace, WorkshopPace.standard);
+      expect(document.groups.map((group) => group.single), document.members);
       expect(
         document.members.map((member) => member.id),
         members.map((member) => member['id']),
@@ -92,6 +120,42 @@ void main() {
       first['figure'] = figure;
       first['id'] = lead['id'];
       expect(parse, throwsA(_errorAt(r'$.members[0].id')));
+    },
+  );
+
+  test(
+    'team groups cover members exactly once and keep the supplied order',
+    () {
+      final input = _fixture('workshop_team_fast');
+      TeamDocument parse() => TeamDocument.parse(jsonEncode(input));
+      final document = parse();
+      expect(document.palette, WorkshopPalette.midnight);
+      expect(document.pace, WorkshopPace.fast);
+      expect(document.lead.color, 0xfff1b861);
+      expect(document.groups.map((group) => group.map((member) => member.id)), [
+        ['pauta', 'fontes'],
+        ['escrita', 'revisao'],
+      ]);
+
+      input['groups'] = [
+        ['pauta', 'fontes', 'escrita', 'revisao'],
+      ];
+      expect(parse().groups.single, document.members);
+      input['groups'] = [
+        ['pauta', 'fontes'],
+        ['pauta', 'revisao'],
+      ];
+      expect(parse, throwsA(_errorAt(r'$.groups[1][0]')));
+      input['groups'] = [
+        ['edicao', 'pauta'],
+      ];
+      expect(parse, throwsA(_errorAt(r'$.groups[0][0]')));
+      input['groups'] = [
+        ['pauta', 'fontes'],
+      ];
+      expect(parse, throwsA(_errorAt(r'$.groups:')));
+      input['pace'] = 'turbo';
+      expect(parse, throwsA(_errorAt(r'$.pace')));
     },
   );
 }

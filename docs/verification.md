@@ -59,3 +59,9 @@ The three new compositions and the grid from the saved model JSON produced byte-
 The first catalog model run exceeded the note limit. Direct length constraints in the Ollama schema and shorter instructions fixed that failure. With the final [Portuguese brief](../example/fixtures/briefs/editorial-catalog.txt), local `qwen3.5:4b` produced the requested “Como nasce um fio” title and eight complete notes on the first attempt in 8.80 seconds, before rendering. A stub test covers semantic repair of a repeated ID and refusal to replace an existing catalog.
 
 The [reference library index](../references/README.md) credits the source posts. Its local folders also contain the source media, archived exports, contact sheets, and editable final documents.
+
+## Styling, grouped motion, and Story framing in 0.3.0
+
+The blueprint palette was tested with the archived Brazilian Portuguese Ollama catalog. Three tiles changed diagram kind or accent without modifying the copy or playback order. The midnight team exported both the poster and the four-second dashboard at 1080 × 1350. Sampled frames show both members active in each of the two waves, followed by the four-step summary. The unstyled production inputs from 0.2.0 produced byte-identical outputs for the grid, poster, and dashboard.
+
+The archived Social Studio file decoded all 360 frames. The subtitle overlapped the activity feed, and the photo zoom reduced the side margins. The revised 1080 × 1920 Story leaves both regions clear. Chrome played the local bundle and sought to 7.5 seconds from a scene control and to 9 seconds from a caption control.

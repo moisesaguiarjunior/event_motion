@@ -2,13 +2,14 @@
 Map<String, Object?> editorialObject(
   Object? value,
   String path,
-  Set<String> fields,
-) {
+  Set<String> fields, {
+  Set<String> optional = const {},
+}) {
   if (value is! Map<String, Object?>) {
     throw FormatException('$path: expected an object');
   }
   for (final key in value.keys) {
-    if (!fields.contains(key)) {
+    if (!fields.contains(key) && !optional.contains(key)) {
       throw FormatException('$path.$key: unknown field');
     }
   }
@@ -29,6 +30,23 @@ List<Object?> editorialList(Object? value, String path, int min, int max) {
 
 final _control = RegExp(r'[\u0000-\u001f\u007f]');
 final _id = RegExp(r'^[a-z][a-z0-9_-]{0,23}$');
+final _rgb = RegExp(r'^#[0-9a-fA-F]{6}$');
+
+int editorialRgb(Object? value, String path) {
+  if (value is! String || !_rgb.hasMatch(value) || value.length != 7) {
+    throw FormatException('$path: expected #RRGGBB');
+  }
+  return 0xff000000 | int.parse(value.substring(1), radix: 16);
+}
+
+T editorialChoice<T extends Enum>(Object? value, String path, List<T> choices) {
+  for (final choice in choices) {
+    if (choice.name == value) return choice;
+  }
+  throw FormatException(
+    '$path: expected one of ${choices.map((choice) => choice.name).join(', ')}',
+  );
+}
 
 String editorialCopy(Object? value, String path, int maximum) {
   if (value is! String ||

@@ -8,14 +8,65 @@ import 'package:handcrafted_flutter/handcrafted_flutter.dart';
 import 'src/catalog_document.dart';
 import 'src/motion_clock.dart';
 
-const _ink = Color(0xFF1B322B);
-const _paper = Color(0xFFF2EBD9);
-const _green = Color(0xFF1E624E);
-const _rule = Color(0xFFD2C6AE);
+typedef _Colors = ({
+  Color paper,
+  Color ink,
+  Color accent,
+  Color rule,
+  Color tile,
+  Color focus,
+  List<Color> diagrams,
+});
+
+const _palettes = <CatalogPalette, _Colors>{
+  CatalogPalette.paper: (
+    paper: Color(0xFFF2EBD9),
+    ink: Color(0xFF1B322B),
+    accent: Color(0xFF1E624E),
+    rule: Color(0xFFD2C6AE),
+    tile: Color(0xFFFBF7EB),
+    focus: Color(0xFFFFFCF2),
+    diagrams: [
+      Color(0xFF26634F),
+      Color(0xFF8E4D2D),
+      Color(0xFF3D5488),
+      Color(0xFF72538C),
+    ],
+  ),
+  CatalogPalette.blueprint: (
+    paper: Color(0xFFE3EAF5),
+    ink: Color(0xFF162941),
+    accent: Color(0xFF245D92),
+    rule: Color(0xFFBBCBE0),
+    tile: Color(0xFFF5F9FF),
+    focus: Color(0xFFFAFCFF),
+    diagrams: [
+      Color(0xFF245D92),
+      Color(0xFF934236),
+      Color(0xFF29685D),
+      Color(0xFF67478E),
+    ],
+  ),
+  CatalogPalette.rose: (
+    paper: Color(0xFFF5E7E3),
+    ink: Color(0xFF3D2637),
+    accent: Color(0xFF8B3A63),
+    rule: Color(0xFFDBC3CA),
+    tile: Color(0xFFFFF6F1),
+    focus: Color(0xFFFFFAF8),
+    diagrams: [
+      Color(0xFF8B3A63),
+      Color(0xFF985120),
+      Color(0xFF2F6372),
+      Color(0xFF62518B),
+    ],
+  ),
+};
 const _slot = Duration(milliseconds: 750);
 const _start = Duration(milliseconds: 500);
 
 video.Video build(CatalogDocument document) {
+  final colors = _palettes[document.palette]!;
   final timeline = MotionTimeline([
     for (final (index, id) in document.order.indexed) ...[
       MotionEvent(
@@ -49,12 +100,12 @@ video.Video build(CatalogDocument document) {
                 height: 600,
                 child: CraftSurface(
                   material: CraftMaterial.paper,
-                  color: _paper,
+                  color: colors.paper,
                   strength: 0.43,
                   seed: 38,
                   child: atMotionTime(
                     timeline,
-                    (frame) => _Catalog(document, frame),
+                    (frame) => _Catalog(document, frame, colors),
                   ),
                 ),
               ),
@@ -67,10 +118,11 @@ video.Video build(CatalogDocument document) {
 }
 
 class _Catalog extends StatelessWidget {
-  const _Catalog(this.document, this.frame);
+  const _Catalog(this.document, this.frame, this.colors);
 
   final CatalogDocument document;
   final MotionFrame frame;
+  final _Colors colors;
 
   @override
   Widget build(BuildContext context) {
@@ -93,7 +145,7 @@ class _Catalog extends StatelessWidget {
             width: 44,
             height: 5,
             decoration: BoxDecoration(
-              color: _green,
+              color: colors.accent,
               borderRadius: BorderRadius.circular(3),
             ),
           ),
@@ -103,7 +155,7 @@ class _Catalog extends StatelessWidget {
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              color: _ink,
+              color: colors.ink,
               fontFamily: 'Roboto',
               fontSize: dense ? 33 : 37,
               height: 1.03,
@@ -116,8 +168,8 @@ class _Catalog extends StatelessWidget {
             document.subtitle,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: _ink,
+            style: TextStyle(
+              color: colors.ink,
               fontFamily: 'Roboto',
               fontSize: 16,
               height: 1.2,
@@ -138,6 +190,7 @@ class _Catalog extends StatelessWidget {
                               tile: tiles[row * columns + column],
                               frame: frame,
                               dense: dense,
+                              colors: colors,
                             )
                           : const SizedBox.shrink(),
                     ),
@@ -147,7 +200,7 @@ class _Catalog extends StatelessWidget {
             ),
           ],
           const SizedBox(height: 13),
-          Container(height: 1, color: _rule),
+          Container(height: 1, color: colors.rule),
           const SizedBox(height: 10),
           Row(
             children: [
@@ -158,8 +211,8 @@ class _Catalog extends StatelessWidget {
                       : 'Em foco · ${active.title}',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: _ink,
+                  style: TextStyle(
+                    color: colors.ink,
                     fontFamily: 'Roboto',
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -172,7 +225,7 @@ class _Catalog extends StatelessWidget {
                   height: 3,
                   margin: const EdgeInsets.only(left: 3),
                   decoration: BoxDecoration(
-                    color: index < done ? _green : _rule,
+                    color: index < done ? colors.accent : colors.rule,
                     borderRadius: BorderRadius.circular(3),
                   ),
                 ),
@@ -185,11 +238,17 @@ class _Catalog extends StatelessWidget {
 }
 
 class _Tile extends StatelessWidget {
-  const _Tile({required this.tile, required this.frame, required this.dense});
+  const _Tile({
+    required this.tile,
+    required this.frame,
+    required this.dense,
+    required this.colors,
+  });
 
   final CatalogTile tile;
   final MotionFrame frame;
   final bool dense;
+  final _Colors colors;
 
   @override
   Widget build(BuildContext context) {
@@ -205,22 +264,17 @@ class _Tile extends StatelessWidget {
                     ),
                   )
         : 1.0;
-    final color = switch (tile.diagram) {
-      DiagramKind.flow => const Color(0xFF26634F),
-      DiagramKind.bars => const Color(0xFF8E4D2D),
-      DiagramKind.curve => const Color(0xFF3D5488),
-      DiagramKind.orbit => const Color(0xFF72538C),
-    };
+    final color = tile.accent == null
+        ? colors.diagrams[tile.diagram.index]
+        : Color(tile.accent!);
+    final titleColor = tile.accent == null ? color : colors.ink;
     return DecoratedBox(
       decoration: BoxDecoration(
         color: active
-            ? Color.alphaBlend(
-                color.withValues(alpha: 0.12),
-                const Color(0xFFFFFCF2),
-              )
-            : const Color(0xFFFBF7EB),
+            ? Color.alphaBlend(color.withValues(alpha: 0.12), colors.focus)
+            : colors.tile,
         border: Border.all(
-          color: active ? color : _rule,
+          color: active ? color : colors.rule,
           width: active ? 1.6 : 1,
         ),
         borderRadius: BorderRadius.circular(12),
@@ -245,7 +299,7 @@ class _Tile extends StatelessWidget {
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                color: color,
+                color: titleColor,
                 fontFamily: 'Roboto',
                 fontSize: dense ? 14.5 : 17,
                 height: dense ? 1.02 : 1.08,
@@ -258,7 +312,7 @@ class _Tile extends StatelessWidget {
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                color: _ink,
+                color: colors.ink,
                 fontFamily: 'Roboto',
                 fontSize: dense ? 11.5 : 12.6,
                 height: dense ? 1.03 : 1.1,

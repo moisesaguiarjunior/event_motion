@@ -4,11 +4,14 @@ import 'editorial_fields.dart';
 
 enum DiagramKind { flow, bars, curve, orbit }
 
+enum CatalogPalette { paper, blueprint, rose }
+
 typedef CatalogTile = ({
   String id,
   String title,
   String note,
   DiagramKind diagram,
+  int? accent,
 });
 
 /// Validated copy and traversal order for the animated editorial grid.
@@ -16,6 +19,7 @@ final class CatalogDocument {
   CatalogDocument._(
     this.title,
     this.subtitle,
+    this.palette,
     List<CatalogTile> tiles,
     List<String> order,
   ) : tiles = List.unmodifiable(tiles),
@@ -23,6 +27,7 @@ final class CatalogDocument {
 
   final String title;
   final String subtitle;
+  final CatalogPalette palette;
   final List<CatalogTile> tiles;
   final List<String> order;
 
@@ -31,13 +36,12 @@ final class CatalogDocument {
 
   factory CatalogDocument.fromJson(Object? value) {
     const root = r'$';
-    final document = editorialObject(value, root, const {
-      'version',
-      'title',
-      'subtitle',
-      'tiles',
-      'order',
-    });
+    final document = editorialObject(
+      value,
+      root,
+      const {'version', 'title', 'subtitle', 'tiles', 'order'},
+      optional: const {'palette'},
+    );
     if (document['version'] != 1) {
       throw FormatException('$root.version: expected 1');
     }
@@ -48,12 +52,12 @@ final class CatalogDocument {
     final ids = <String>{};
     for (final (index, raw) in input.indexed) {
       final path = '$root.tiles[$index]';
-      final tile = editorialObject(raw, path, const {
-        'id',
-        'title',
-        'note',
-        'diagram',
-      });
+      final tile = editorialObject(
+        raw,
+        path,
+        const {'id', 'title', 'note', 'diagram'},
+        optional: const {'accent'},
+      );
       final id = editorialId(tile['id'], '$path.id');
       if (!ids.add(id)) throw FormatException('$path.id: duplicate tile $id');
       final diagram = DiagramKind.values
@@ -69,6 +73,9 @@ final class CatalogDocument {
         title: editorialCopy(tile['title'], '$path.title', 22),
         note: editorialCopy(tile['note'], '$path.note', 43),
         diagram: diagram,
+        accent: tile.containsKey('accent')
+            ? editorialRgb(tile['accent'], '$path.accent')
+            : null,
       ));
     }
     final sequence = editorialList(
@@ -86,6 +93,13 @@ final class CatalogDocument {
       }
       order.add(id);
     }
-    return CatalogDocument._(title, subtitle, tiles, order);
+    final palette = document.containsKey('palette')
+        ? editorialChoice(
+            document['palette'],
+            '$root.palette',
+            CatalogPalette.values,
+          )
+        : CatalogPalette.paper;
+    return CatalogDocument._(title, subtitle, palette, tiles, order);
   }
 }

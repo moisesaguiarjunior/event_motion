@@ -19,7 +19,7 @@ Results are written under `example/build/hyperframes/<mode>/` unless `--out` is 
 
 ## Social Studio review
 
-The current Social Studio desktop Story job accepts images and WAV audio. The adapter samples eight frames from Event Motion's four-second pipeline, letterboxes those frames for 9:16, and creates a twelve-second Story using the existing photo-sequence job and a silent audio track. Open the resulting review page to seek by scene or caption.
+The current Social Studio desktop Story job accepts images and WAV audio. The adapter samples eight frames from Event Motion's four-second pipeline and creates a twelve-second Story using the photo-sequence job and a silent audio track. It reserves side margins for the template zoom and places the activity feed above the caption band. The Story uses cuts between sampled images. Open the resulting review page to seek by scene or caption.
 
 ```sh
 bash tool/render_example.sh agent_pipeline

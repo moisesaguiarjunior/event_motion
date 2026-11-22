@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "title": "Oficina em duas ondas",
+  "subtitle": "Pauta e pesquisa abrem caminho para escrita e revisão.",
+  "summary": "Rascunho pronto para revisão humana.",
+  "palette": "midnight",
+  "pace": "fast",
+  "groups": [["pauta", "fontes"], ["escrita", "revisao"]],
+  "lead": {"id":"edicao", "role":"Edição", "note":"Abriu a pauta da oficina", "figure":"lantern", "color":"#F1B861"},
+  "members": [
+    {"id":"pauta", "role":"Pauta", "note":"Definiu a pergunta central", "figure":"seed", "color":"#99C686"},
+    {"id":"fontes", "role":"Pesquisa", "note":"Reuniu dados e referências", "figure":"ticket", "color":"#EE9088"},
+    {"id":"escrita", "role":"Escrita", "note":"Montou o primeiro rascunho", "figure":"fold", "color":"#84B9EC"},
+    {"id":"revisao", "role":"Revisão", "note":"Conferiu texto e evidências", "figure":"seal", "color":"#BA9BDD"}
+  ]
+}

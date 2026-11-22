@@ -12,12 +12,77 @@ import 'src/workshop_figure.dart';
 const _ink = Color(0xFF17312D);
 const _paper = Color(0xFFF2E7D0);
 const _cream = Color(0xFFFBF3DF);
-const _emerald = Color(0xFF275B50);
-const _dark = Color(0xFF112A29);
-const _mint = Color(0xFFA1D4B9);
-const _first = Duration(milliseconds: 700);
-const _handoff = Duration(milliseconds: 1150);
-const _finish = Duration(milliseconds: 5300);
+
+typedef _Colors = ({
+  Color base,
+  Color accent,
+  Color stage,
+  Color border,
+  Color feed,
+  Color inactive,
+  Color note,
+  Color grid,
+  Color poster,
+  Color idleBar,
+  Color badge,
+  Color badgeBorder,
+});
+
+const _palettes = <WorkshopPalette, _Colors>{
+  WorkshopPalette.forest: (
+    base: Color(0xFF112A29),
+    accent: Color(0xFFA1D4B9),
+    stage: Color(0xFF1A3734),
+    border: Color(0xFF416761),
+    feed: Color(0xFF183633),
+    inactive: Color(0xFF537973),
+    note: Color(0xFF102C29),
+    grid: Color(0x355EA094),
+    poster: Color(0xFF275B50),
+    idleBar: Color(0xFF365753),
+    badge: Color(0xFF254640),
+    badgeBorder: Color(0xFF537268),
+  ),
+  WorkshopPalette.midnight: (
+    base: Color(0xFF151D38),
+    accent: Color(0xFFA7CFF8),
+    stage: Color(0xFF222D4D),
+    border: Color(0xFF51678E),
+    feed: Color(0xFF202C48),
+    inactive: Color(0xFF627AA6),
+    note: Color(0xFF151F3B),
+    grid: Color(0x3595BCF3),
+    poster: Color(0xFF222D4D),
+    idleBar: Color(0xFF51678E),
+    badge: Color(0xFF202C48),
+    badgeBorder: Color(0xFF51678E),
+  ),
+  WorkshopPalette.aubergine: (
+    base: Color(0xFF2E2133),
+    accent: Color(0xFFF0B9CA),
+    stage: Color(0xFF402B44),
+    border: Color(0xFF78566F),
+    feed: Color(0xFF3B293F),
+    inactive: Color(0xFF916F8A),
+    note: Color(0xFF322336),
+    grid: Color(0x35D398C6),
+    poster: Color(0xFF402B44),
+    idleBar: Color(0xFF78566F),
+    badge: Color(0xFF3B293F),
+    badgeBorder: Color(0xFF78566F),
+  ),
+};
+
+class _Pacing {
+  const _Pacing(this.fast, this.groups);
+
+  final bool fast;
+  final int groups;
+  Duration get opening => Duration(milliseconds: fast ? 320 : 700);
+  Duration get step => Duration(milliseconds: fast ? 980 : 1150);
+  Duration get finish => opening + step * groups;
+  Duration get end => finish + Duration(milliseconds: fast ? 1720 : 2700);
+}
 
 video.Video buildPoster(TeamDocument document) => _video(
   const video.Time.frames(1),
@@ -32,6 +97,10 @@ video.Video buildPoster(TeamDocument document) => _video(
 );
 
 video.Video buildDashboard(TeamDocument document) {
+  final pacing = _Pacing(
+    document.pace == WorkshopPace.fast,
+    document.groups.length,
+  );
   final timeline = MotionTimeline([
     MotionEvent(
       at: Duration.zero,
@@ -39,32 +108,37 @@ video.Video buildDashboard(TeamDocument document) {
       status: MotionStatus.active,
       message: document.lead.note,
     ),
-    for (final (index, member) in document.members.indexed) ...[
-      MotionEvent(
-        at: _first + _handoff * index,
-        node: member.id,
-        from: document.lead.id,
-        status: MotionStatus.active,
-        message: '${member.role} entrou em cena',
-      ),
-      MotionEvent(
-        at: _first + _handoff * (index + 1),
-        node: member.id,
-        status: MotionStatus.complete,
-        message: member.note,
-      ),
+    for (final (index, group) in document.groups.indexed) ...[
+      for (final member in group)
+        MotionEvent(
+          at: pacing.opening + pacing.step * index,
+          node: member.id,
+          from: document.lead.id,
+          status: MotionStatus.active,
+          message: '${member.role} entrou em cena',
+        ),
+      for (final member in group)
+        MotionEvent(
+          at: pacing.opening + pacing.step * (index + 1),
+          node: member.id,
+          status: MotionStatus.complete,
+          message: member.note,
+        ),
     ],
     MotionEvent(
-      at: _finish,
+      at: pacing.finish,
       node: document.lead.id,
       status: MotionStatus.complete,
       message: document.summary,
     ),
   ]);
+  final poster = !pacing.fast && pacing.groups == 4
+      ? const video.Time.frames(86)
+      : video.Time.ms((pacing.opening + pacing.step ~/ 2).inMilliseconds);
   return _video(
-    const video.Time.seconds(8),
-    const video.Time.frames(86),
-    atMotionTime(timeline, (frame) => _Dashboard(document, frame)),
+    video.Time.frames((pacing.end.inMilliseconds * 24 / 1000).round()),
+    poster,
+    atMotionTime(timeline, (frame) => _Dashboard(document, frame, pacing)),
   );
 }
 
@@ -89,11 +163,11 @@ video.Video _video(video.Time duration, video.Time poster, Widget page) =>
     );
 
 class _Heading extends StatelessWidget {
-  const _Heading(this.title, this.subtitle, {required this.onDark});
+  const _Heading(this.title, this.subtitle, {this.darkAccent});
 
   final String title;
   final String subtitle;
-  final bool onDark;
+  final Color? darkAccent;
 
   @override
   Widget build(BuildContext context) => Column(
@@ -105,9 +179,9 @@ class _Heading extends StatelessWidget {
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
         style: TextStyle(
-          color: onDark ? _cream : _ink,
+          color: darkAccent == null ? _ink : _cream,
           fontFamily: 'Roboto',
-          fontSize: onDark ? 36 : 43,
+          fontSize: darkAccent == null ? 43 : 36,
           fontWeight: FontWeight.w900,
           letterSpacing: -1.8,
           height: 1.03,
@@ -119,7 +193,7 @@ class _Heading extends StatelessWidget {
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
         style: TextStyle(
-          color: onDark ? _mint : _ink,
+          color: darkAccent ?? _ink,
           fontFamily: 'Roboto',
           fontSize: 16,
           height: 1.14,
@@ -140,7 +214,7 @@ class _Poster extends StatelessWidget {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _Heading(document.title, document.subtitle, onDark: false),
+        _Heading(document.title, document.subtitle),
         const SizedBox(height: 25),
         Expanded(
           child: Row(
@@ -149,14 +223,21 @@ class _Poster extends StatelessWidget {
               Expanded(
                 child: DecoratedBox(
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [_emerald, _dark],
+                    gradient: LinearGradient(
+                      colors: [
+                        _palettes[document.palette]!.poster,
+                        _palettes[document.palette]!.base,
+                      ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: _Portrait(document.lead, raised: true),
+                  child: _Portrait(
+                    document.lead,
+                    raised: true,
+                    accent: _palettes[document.palette]!.accent,
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
@@ -210,14 +291,15 @@ class _Poster extends StatelessWidget {
 }
 
 class _Portrait extends StatelessWidget {
-  const _Portrait(this.member, {required this.raised});
+  const _Portrait(this.member, {required this.raised, this.accent});
 
   final WorkshopMember member;
   final bool raised;
+  final Color? accent;
 
   @override
   Widget build(BuildContext context) {
-    final color = workshopColor(member.figure);
+    final color = workshopMemberColor(member);
     return DecoratedBox(
       decoration: BoxDecoration(
         color: raised
@@ -240,7 +322,10 @@ class _Portrait extends StatelessWidget {
                     angle: raised
                         ? -.075
                         : (member.figure.index.isEven ? -.11 : .085),
-                    child: WorkshopCharacter(figure: member.figure),
+                    child: WorkshopCharacter(
+                      figure: member.figure,
+                      color: color,
+                    ),
                   ),
                 ),
               ),
@@ -264,8 +349,8 @@ class _Portrait extends StatelessWidget {
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: _mint,
+                style: TextStyle(
+                  color: accent,
                   fontFamily: 'Roboto',
                   fontSize: 14,
                 ),
@@ -280,10 +365,12 @@ class _Portrait extends StatelessWidget {
 }
 
 class _Dashboard extends StatelessWidget {
-  const _Dashboard(this.document, this.frame);
+  const _Dashboard(this.document, this.frame, this.pacing);
 
   final TeamDocument document;
   final MotionFrame frame;
+  final _Pacing pacing;
+  _Colors get colors => _palettes[document.palette]!;
 
   @override
   Widget build(BuildContext context) {
@@ -291,16 +378,23 @@ class _Dashboard extends StatelessWidget {
         .where((member) => frame.statusOf(member.id) == MotionStatus.complete)
         .length;
     final summary = Curves.easeOut.transform(
-      frame.progressSince(_finish, const Duration(milliseconds: 460)),
+      frame.progressSince(
+        pacing.finish,
+        Duration(milliseconds: pacing.fast ? 300 : 460),
+      ),
     );
     return ColoredBox(
-      color: _dark,
+      color: colors.base,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(28, 31, 28, 26),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _Heading(document.title, document.subtitle, onDark: true),
+            _Heading(
+              document.title,
+              document.subtitle,
+              darkAccent: colors.accent,
+            ),
             const SizedBox(height: 17),
             Row(
               children: [
@@ -320,16 +414,14 @@ class _Dashboard extends StatelessWidget {
                     height: 4,
                     margin: const EdgeInsets.only(left: 4),
                     decoration: BoxDecoration(
-                      color: index < completed
-                          ? _mint
-                          : const Color(0xFF365753),
+                      color: index < completed ? colors.accent : colors.idleBar,
                       borderRadius: BorderRadius.circular(3),
                     ),
                   ),
                 const SizedBox(width: 10),
                 Text(
                   '$completed / ${document.members.length}',
-                  style: const TextStyle(color: _mint, fontSize: 13),
+                  style: TextStyle(color: colors.accent, fontSize: 13),
                 ),
               ],
             ),
@@ -337,20 +429,30 @@ class _Dashboard extends StatelessWidget {
             Expanded(
               child: DecoratedBox(
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1A3734),
-                  border: Border.all(color: const Color(0xFF416761)),
+                  color: colors.stage,
+                  border: Border.all(color: colors.border),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: LayoutBuilder(
                   builder: (context, constraints) {
                     final size = constraints.biggest;
+                    // Leave room for one callout per side of the lead.
+                    final notes = <int>{};
+                    final sides = <int>{};
+                    for (final (index, member) in document.members.indexed) {
+                      if (frame.statusOf(member.id) == MotionStatus.active &&
+                          sides.add(index % 2)) {
+                        notes.add(index);
+                      }
+                    }
                     return Stack(
                       fit: StackFit.expand,
                       children: [
-                        CustomPaint(painter: _Routes(document, frame)),
-                        for (final (index, member) in document.members.indexed)
-                          if (frame.statusOf(member.id) == MotionStatus.active)
-                            _note(member, index, size),
+                        CustomPaint(
+                          painter: _Routes(document, frame, pacing, notes),
+                        ),
+                        for (final index in notes)
+                          _note(document.members[index], index, size),
                         for (final (index, member) in document.members.indexed)
                           _place(
                             member,
@@ -376,7 +478,7 @@ class _Dashboard extends StatelessWidget {
                     opacity: 1 - summary,
                     child: DecoratedBox(
                       decoration: BoxDecoration(
-                        color: const Color(0xFF183633),
+                        color: colors.feed,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Padding(
@@ -384,10 +486,10 @@ class _Dashboard extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
+                            Text(
                               'Atividade recente',
                               style: TextStyle(
-                                color: _mint,
+                                color: colors.accent,
                                 fontFamily: 'Roboto',
                                 fontSize: 14,
                                 fontWeight: FontWeight.w700,
@@ -413,7 +515,7 @@ class _Dashboard extends StatelessWidget {
                       opacity: summary,
                       child: DecoratedBox(
                         decoration: BoxDecoration(
-                          color: _mint,
+                          color: colors.accent,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Padding(
@@ -461,15 +563,15 @@ class _Dashboard extends StatelessWidget {
     final cue = frame.latestOn(document.lead.id, member.id)!;
     final opacity = Curves.easeOut.transform(
       frame.progressSince(
-        cue.at + const Duration(milliseconds: 210),
-        const Duration(milliseconds: 230),
+        cue.at + Duration(milliseconds: pacing.fast ? 130 : 210),
+        Duration(milliseconds: pacing.fast ? 140 : 230),
       ),
     );
     const width = 150.0;
     const height = 37.0;
     final center = _at(_points[index], size);
     final above = index >= 2;
-    final color = workshopColor(member.figure);
+    final color = workshopMemberColor(member);
     return Positioned(
       left: center.dx - width / 2,
       top: above ? center.dy - 43 - height : center.dy + 63,
@@ -479,7 +581,7 @@ class _Dashboard extends StatelessWidget {
         opacity: opacity,
         child: DecoratedBox(
           decoration: BoxDecoration(
-            color: const Color(0xFF102C29),
+            color: colors.note,
             border: Border.all(color: color.withValues(alpha: .73)),
             borderRadius: BorderRadius.circular(8),
           ),
@@ -515,12 +617,22 @@ class _Dashboard extends StatelessWidget {
     final state = frame.statusOf(member.id);
     final active = state == MotionStatus.active;
     final time = frame.elapsed.inMicroseconds / Duration.microsecondsPerSecond;
-    final wave = math.sin(time * 4.3 + index * 1.65);
+    final wave = math.sin(time * (pacing.fast ? 7.2 : 4.3) + index * 1.65);
+    var lift = 0.0;
+    if (pacing.fast && active && !lead) {
+      final start = frame.latestOn(document.lead.id, member.id)!.at;
+      final arrival = frame.progressSince(
+        start,
+        const Duration(milliseconds: 430),
+      );
+      lift = math.sin(math.pi * arrival) * (1 - arrival);
+    }
     final blinkPhase = (time + index * .34) % 2.7;
     final blink = (1 - (blinkPhase - .1).abs() / .1).clamp(0.0, 1.0);
     final diameter = lead ? 91.0 : 69.0;
     final center = _at(anchor, size);
-    final color = workshopColor(member.figure);
+    final color = workshopMemberColor(member);
+    final badgeText = active && color.computeLuminance() >= .16 ? _ink : _cream;
     return Positioned(
       key: ValueKey(member.id),
       width: 112,
@@ -529,21 +641,26 @@ class _Dashboard extends StatelessWidget {
       child: Column(
         children: [
           Transform.translate(
-            offset: Offset(0, wave * (active ? 3.7 : 1.3)),
+            offset: Offset(0, wave * (active ? 3.7 : 1.3) - lift * 12),
             child: Transform.rotate(
               angle: wave * (active ? .126 : .051),
-              child: SizedBox.square(
-                dimension: diameter,
-                child: WorkshopCharacter(figure: member.figure, blink: blink),
+              child: Transform.scale(
+                scale: 1 + lift * .22,
+                child: SizedBox.square(
+                  dimension: diameter,
+                  child: WorkshopCharacter(
+                    figure: member.figure,
+                    color: color,
+                    blink: blink,
+                  ),
+                ),
               ),
             ),
           ),
           DecoratedBox(
             decoration: BoxDecoration(
-              color: active ? color : const Color(0xFF254640),
-              border: Border.all(
-                color: active ? color : const Color(0xFF537268),
-              ),
+              color: active ? color : colors.badge,
+              border: Border.all(color: active ? color : colors.badgeBorder),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Padding(
@@ -553,7 +670,7 @@ class _Dashboard extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  color: active ? _ink : _cream,
+                  color: badgeText,
                   fontFamily: 'Roboto',
                   fontSize: 13,
                   fontWeight: FontWeight.w800,
@@ -580,15 +697,18 @@ Offset _at(Offset anchor, Size size) =>
     Offset(anchor.dx * size.width, anchor.dy * size.height);
 
 class _Routes extends CustomPainter {
-  const _Routes(this.document, this.frame);
+  const _Routes(this.document, this.frame, this.pacing, this.notes);
 
   final TeamDocument document;
   final MotionFrame frame;
+  final _Pacing pacing;
+  final Set<int> notes;
 
   @override
   void paint(Canvas canvas, Size size) {
     if (size.isEmpty) return;
-    final grid = Paint()..color = const Color(0x355EA094);
+    final colors = _palettes[document.palette]!;
+    final grid = Paint()..color = colors.grid;
     for (double x = 12; x < size.width; x += 13) {
       for (double y = 12; y < size.height; y += 13) {
         canvas.drawCircle(Offset(x, y), .65, grid);
@@ -597,7 +717,7 @@ class _Routes extends CustomPainter {
     final origin = _at(_center, size);
     for (final (index, member) in document.members.indexed) {
       final finish = _at(_points[index], size);
-      final color = workshopColor(member.figure);
+      final color = workshopMemberColor(member);
       final cue = frame.latestOn(document.lead.id, member.id);
       final active = frame.statusOf(member.id) == MotionStatus.active;
       final path = Path()
@@ -611,26 +731,40 @@ class _Routes extends CustomPainter {
           finish.dy,
         );
       final wire = Paint()
-        ..color = cue == null
-            ? const Color(0xFF537973)
-            : color.withValues(alpha: .62)
+        ..color = cue == null ? colors.inactive : color.withValues(alpha: .62)
         ..style = PaintingStyle.stroke
         ..strokeWidth = active ? 2.6 : 1.35;
       canvas.drawPath(path, wire);
       if (!active || cue == null) continue;
-      final connector = Paint()
-        ..color = color.withValues(alpha: .73)
-        ..strokeWidth = 1;
-      canvas.drawLine(
-        finish + Offset(0, index < 2 ? 51 : -34),
-        finish + Offset(0, index < 2 ? 63 : -43),
-        connector,
-      );
-      final progress = frame.progressSince(cue.at, _handoff);
+      if (notes.contains(index)) {
+        final connector = Paint()
+          ..color = color.withValues(alpha: .73)
+          ..strokeWidth = 1;
+        canvas.drawLine(
+          finish + Offset(0, index < 2 ? 51 : -34),
+          finish + Offset(0, index < 2 ? 63 : -43),
+          connector,
+        );
+      }
+      final progress = frame.progressSince(cue.at, pacing.step);
       final segment = path.computeMetrics().first;
       final head = segment
           .getTangentForOffset(segment.length * progress)!
           .position;
+      if (pacing.fast) {
+        final tail = segment.extractPath(
+          segment.length * math.max(0.0, progress - .24),
+          segment.length * progress,
+        );
+        canvas.drawPath(
+          tail,
+          Paint()
+            ..color = color.withValues(alpha: .48)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 5
+            ..strokeCap = StrokeCap.round,
+        );
+      }
       canvas.drawCircle(head, 8, Paint()..color = color.withValues(alpha: .24));
       canvas.drawCircle(head, 4.2, Paint()..color = color);
     }

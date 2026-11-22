@@ -1,3 +1,9 @@
+# 0.3.0
+
+- Customize editorial and character colors with named palettes and optional RGB overrides.
+- Add simultaneous dashboard activation groups and a four-second fast example.
+- Keep the Social Studio Story activity feed clear of the captions and preserve its side margins.
+
 # 0.2.0
 
 - Add an animated editorial grid with eight to twelve tiles, four miniature diagrams, and local Ollama authoring.

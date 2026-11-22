@@ -13,6 +13,9 @@ Color workshopColor(WorkshopFigure figure) => switch (figure) {
   WorkshopFigure.seal => const Color(0xFFA98BC1),
 };
 
+Color workshopMemberColor(WorkshopMember member) =>
+    member.color == null ? workshopColor(member.figure) : Color(member.color!);
+
 final _outlines = {
   for (final figure in WorkshopFigure.values)
     figure: (Size size) => _shape(figure, size),
@@ -20,14 +23,19 @@ final _outlines = {
 
 /// A cut-paper character shared by the still poster and the timed dashboard.
 class WorkshopCharacter extends StatelessWidget {
-  const WorkshopCharacter({super.key, required this.figure, this.blink = 0});
+  const WorkshopCharacter({
+    super.key,
+    required this.figure,
+    required this.color,
+    this.blink = 0,
+  });
 
   final WorkshopFigure figure;
+  final Color color;
   final double blink;
 
   @override
   Widget build(BuildContext context) {
-    final color = workshopColor(figure);
     return CustomPaint(
       painter: _Shadow(figure, color),
       child: CraftSurface(
@@ -162,7 +170,9 @@ class _Features extends CustomPainter {
     canvas.save();
     canvas.scale(size.width, size.height);
     final ink = Paint()
-      ..color = const Color(0xFF1A3530)
+      ..color = color.computeLuminance() < .16
+          ? const Color(0xFFFCF3E1)
+          : const Color(0xFF1A3530)
       ..strokeWidth = .017
       ..strokeCap = StrokeCap.round;
     final facet = Paint()..color = const Color(0x47FFF4DB);

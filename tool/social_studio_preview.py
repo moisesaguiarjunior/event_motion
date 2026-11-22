@@ -20,7 +20,10 @@ def preview(checkout, movie, destination):
         root = Path(temporary)
         subprocess.run([
             'ffmpeg', '-v', 'error', '-i', str(movie.resolve()), '-vf',
-            'fps=2,scale=1080:1350,pad=1080:1920:0:285:color=0x101C2E',
+            # The photo template zooms in and puts captions in the lower third.
+            # Keep the rendered feed above that band and leave room at the sides.
+            'fps=2,scale=920:1150:force_original_aspect_ratio=decrease,'
+            'pad=1080:1920:(ow-iw)/2:160:color=0x101C2E',
             '-frames:v', '8', str(root / 'frame-%02d.png'),
         ], check=True)
         frames = sorted(root.glob('frame-*.png'))

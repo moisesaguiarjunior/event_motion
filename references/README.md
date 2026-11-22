@@ -33,3 +33,14 @@ Painel de agentes, cartões em perspectiva, comparativo plano e em papel, ativa�
 | `06-verificacao` | As três capas lado a lado, a 360 px por composição. |
 
 Os MP4 e PNG principais usam 1080 × 1350. Os arquivos `quadros.jpg` mostram a abertura, os destaques e o encerramento. [Comandos e formatos](../docs/editorial-styles.md) · [Verificação](../docs/verification.md)
+
+## 04 · Ajustes v0.3.0
+
+| Pasta | Conteúdo |
+| --- | --- |
+| `01-grade-ollama-blueprint` | “Como nasce um fio” em azul, com mudanças de diagrama e de cor por célula. Inclui o JSON editável. |
+| `02-painel-rapido` | “Oficina em duas ondas”, com ativações em pares, fundo azul-noite e trilhas luminosas. Inclui o JSON e uma prancha com as duas ondas. |
+| `03-poster-personagens-midnight` | Versão do pôster com as cores e os personagens do painel rápido. |
+| `04-social-studio-corrigido` | Story 9:16 com legendas afastadas do feed e margens laterais para o zoom. Inclui pranchas de antes e depois e uma versão contínua da animação original. |
+
+A prancha `capas-no-feed.png` reúne a grade, o pôster e o painel a 360 px de largura por composição.

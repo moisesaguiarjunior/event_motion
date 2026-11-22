@@ -22,6 +22,8 @@ The [catalog schema](../example/spec/catalog.v1.schema.json) uses version 1. Set
 
 Choose `flow` for a sequence, `bars` for a comparison, `curve` for change, or `orbit` for relationships. The marks are illustrative and have no numeric scale. For a quantitative comparison with units, intervals, and sources, use the [comparison example](../example/lib/comparison.dart).
 
+Set the optional `palette` field to `paper`, `blueprint`, or `rose`. A tile can set an optional `accent` in `#RRGGBB` to recolor its diagram and focus outline. Edit `diagram` and `accent` together to change a tile's visual treatment without changing its copy or playback order.
+
 Keep tile titles within 22 characters and notes within 43. Concise copy gives diagrams more room, particularly with nine to twelve tiles, which use three columns. The [twelve-tile fixture](../example/fixtures/editorial_catalog_12.json) demonstrates a dense layout with reverse playback order. Review the final PNG at the size of a phone feed.
 
 ## Generate a grid locally
@@ -39,6 +41,14 @@ Choose a fresh destination when authoring a new catalog. Rerender the saved cata
 
 The version 1 team document has a `title`, `subtitle`, `summary`, a `lead`, and four `members`. Each character specifies an `id`, a `role` of up to 16 characters, a `note` of up to 43 characters, and a distinct `figure` from `lantern`, `fold`, `seed`, `ticket`, and `seal`.
 
-Member order determines dashboard activation. Each step uses the same event clock for its pulse, callout, status, and feed. The poster uses the five roles and the lead's note on a textured paper surface.
+Choose `forest`, `midnight`, or `aubergine` with the optional `palette` field. The poster uses that palette for the lead's panel. Set an individual character's optional `color` to `#RRGGBB` to recolor the figure and its active signal.
+
+Member order determines default dashboard activation. Set `groups` to an ordered array of arrays of member IDs to activate a team batch at once. Include every member exactly once. The lead coordinates every group automatically. In groups with several members on the same side of the stage, the first role on that side gets the on-stage callout while every member still has an active badge and signal.
+
+Set `pace` to `fast` for quicker handoffs, a stronger character entrance, and signal trails. In the [grouped example](../example/fixtures/workshop_team_fast.json), two pairs activate over a four-second MP4.
+
+```sh
+bash tool/render_example.sh character_dashboard example/fixtures/workshop_team_fast.json ./out/dashboard-fast
+```
 
 The [reference index](../references/README.md) credits the posts that informed each style. The [verification record](verification.md) describes the model and render checks.

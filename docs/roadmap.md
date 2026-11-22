@@ -57,3 +57,10 @@ See the [verification record](verification.md) for the clean-checkout render, mo
 - [x] Check the new headless exports in CI, version the verified source, and assemble the local reference library with the final artifacts.
 
 See the [command and input guide](editorial-styles.md), the [verification record](verification.md#editorial-compositions-in-020), and the [reference library](../references/README.md).
+
+## 7. Custom styles, group motion, and Story review
+
+- [x] Add editable palettes, per-tile diagram accents, and per-character colors with version 1 compatibility.
+- [x] Add faster dashboard motion and simultaneous activation groups. Verify two batches and preserve the approved standard renders.
+- [x] Fix the Social Studio activity feed and caption overlap and verify the 9:16 Story export.
+- [x] Archive the follow-up examples and publish the verified source.

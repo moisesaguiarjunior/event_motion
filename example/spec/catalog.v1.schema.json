@@ -8,6 +8,7 @@
     "version": {"const": 1},
     "title": {"type": "string", "minLength": 1, "maxLength": 40},
     "subtitle": {"type": "string", "minLength": 1, "maxLength": 88},
+    "palette": {"enum":["paper","blueprint","rose"]},
     "tiles": {"type":"array", "minItems":8, "maxItems":12, "items":{"$ref":"#/$defs/tile"}},
     "order": {"type":"array", "minItems":8, "maxItems":12, "uniqueItems":true, "items":{"$ref":"#/$defs/id"}}
   },
@@ -20,7 +21,8 @@
         "id":{"$ref":"#/$defs/id"},
         "title":{"type":"string", "minLength":1, "maxLength":22},
         "note":{"type":"string", "minLength":1, "maxLength":43},
-        "diagram":{"enum":["flow","bars","curve","orbit"]}
+        "diagram":{"enum":["flow","bars","curve","orbit"]},
+        "accent":{"type":"string","pattern":"^#[0-9a-fA-F]{6}$"}
       }
     }
   }
