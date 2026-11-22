@@ -37,15 +37,21 @@ final feed = MotionEventFeed(frame: frame);
 
 Pass the desired elapsed time from your app or renderer. At 1.3 seconds, the review card is running and a pulse is moving along the connection. Sampling 0.5 seconds restores the earlier state. Use `frame.statusOf(id)` and `frame.progressSince(start, duration)` to drive a card, caption, or custom painter on the same clock. Use `nodeBuilder` to supply your own widget for each node.
 
-## Render the example
+## Render the examples
 
 Run from the repository root with Flutter 3.44 or newer and FFmpeg available on `PATH`.
 
 ```sh
 bash tool/render_example.sh
+bash tool/render_example.sh card_sequence
 ```
 
-The [four-agent example](example/lib/agent_pipeline.dart) turns a fictional workflow into a four-second video at 480 × 600 and 24 fps. The command writes `agent_pipeline.mp4` and `agent_pipeline.png` to `example/build/agent_pipeline/`. The example pins a Fluvie revision and uses its frame clock and export pipeline. The library itself depends only on Flutter.
+The first command renders both examples. Pass `agent_pipeline` or `card_sequence` to render one. Each writes an MP4 and a PNG under `example/build/<name>/` at 480 × 600 and 24 fps.
+
+- [Agent pipeline](example/lib/agent_pipeline.dart) shows state changes, pulses and an activity feed over four seconds.
+- [Card sequence](example/lib/card_sequence.dart) brings each card into focus, then arranges the four cards in a mosaic over seven seconds.
+
+Both examples share a clock adapter for a pinned Fluvie revision. The library itself depends only on Flutter.
 
 ## Develop
 

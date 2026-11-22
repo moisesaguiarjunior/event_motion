@@ -2,6 +2,8 @@ import 'package:event_motion/event_motion.dart';
 import 'package:flutter/widgets.dart';
 import 'package:fluvie/fluvie.dart' as video;
 
+import 'src/motion_clock.dart';
+
 final _diagram = MotionDiagram(
   nodes: const [
     MotionNode('brief', 'Brief', Offset(0.5, 0)),
@@ -87,17 +89,7 @@ video.Video build() => video.Video(
       duration: const video.Time.seconds(4),
       children: [
         Positioned.fill(
-          // The example pins the Fluvie revision that exports this frame clock.
-          // ignore: experimental_member_use
-          child: video.FrameBuilder((clock) {
-            final localFrame = clock.frame - clock.scope.startFrame;
-            final elapsed = Duration(
-              microseconds:
-                  (localFrame * Duration.microsecondsPerSecond / clock.fps)
-                      .round(),
-            );
-            return _Pipeline(frame: _timeline.at(elapsed));
-          }),
+          child: atMotionTime(_timeline, (frame) => _Pipeline(frame: frame)),
         ),
       ],
     ),

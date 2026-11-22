@@ -8,7 +8,7 @@ The deliverable is a local workflow that turns a brief and optional data into a 
 - [x] Implement timeline sampling, node states, directed pulses, and a recent-event feed.
 - [x] Add a Fluvie example that exports a 4:5 MP4 and PNG and documents how to run it.
 - [x] Cover backward seeks, coincident events, and state shared by graph and feed.
-- [ ] Reuse the same timeline in a second composition built around a sequence of cards. Use the example to identify which non-graph components deserve a public API.
+- [x] Reuse the same timeline in a second composition built around a sequence of cards. The existing frame API covers card reveals, layout changes and custom paint. Keep the card treatment in the example until a second design needs it.
 - [ ] Check short and long text, localized labels, and layouts at phone feed size.
 
 ## 2. Local authoring
@@ -24,7 +24,8 @@ The deliverable is a local workflow that turns a brief and optional data into a 
 
 - [ ] Add a polished activation sequence with step labels, an event feed and a representative cover.
 - [ ] Add an editorial comparison image with bars, intervals and source notes. Put numeric scaling and labeling in the renderer.
-- [ ] Add a card sequence with a final mosaic and compare a Flutter version against one rendered by HyperFrames.
+- [x] Add a Flutter card sequence with a final mosaic.
+- [ ] Render a matching card sequence in HyperFrames and compare authoring effort, visual quality and export time.
 - [ ] Try a Handcrafted treatment on one composition. Verify legibility at feed size and keep the material styling configurable.
 - [ ] Validate 1080 × 1350 output, mobile-feed legibility, cover selection, and optional audio.
 
@@ -41,4 +42,4 @@ The deliverable is a local workflow that turns a brief and optional data into a 
 - [ ] Try the first composition through the Social Studio job and review flow.
 - [ ] Add CI for analysis, tests and one representative headless render.
 - [ ] Document supported Flutter and Fluvie revisions and the scope of the public API.
-- [ ] Choose the release license, check bundled assets and dependencies, and review the release candidate before publishing.
+- [ ] Choose the release license, check bundled assets and dependencies, and review the release candidate before publishing the package.
