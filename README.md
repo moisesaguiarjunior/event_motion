@@ -63,7 +63,7 @@ bash tool/render_example.sh character_poster
 bash tool/render_example.sh character_dashboard
 ```
 
-The grid highlights eight to twelve illustrated notes in order and exports the complete grid as a cover. The character poster and animated dashboard share one team file. The dashboard shows signal paths, contextual callouts, an activity feed, and completion. All three use a 1080 × 1350 canvas. See the [input templates, local authoring command, and visual references](docs/editorial-styles.md).
+The grid highlights eight to twelve illustrated notes in order and exports the complete grid as a cover. The character poster and animated dashboard share one team file. The dashboard shows signal paths, contextual callouts, an activity feed, and completion. All three use a 1080 × 1350 canvas. See the [input templates, local authoring command, and visual references](https://github.com/moisesaguiarjunior/event_motion/blob/main/docs/editorial-styles.md).
 
 ## Render a workflow from JSON
 
