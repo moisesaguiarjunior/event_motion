@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:alchemist/alchemist.dart' show loadFonts;
 import 'package:event_motion_example/agent_pipeline.dart' as pipeline;
 import 'package:event_motion_example/card_sequence.dart' as sequence;
+import 'package:event_motion_example/src/workflow_spec.dart';
 import 'package:fluvie/fluvie.dart' show Video;
 import 'package:fluvie/rendering.dart';
 import 'package:flutter/widgets.dart';
@@ -13,12 +14,23 @@ const _render = bool.fromEnvironment('RENDER_EXAMPLE');
 void main() {
   if (_render) setUpAll(loadFonts);
 
+  final workflow = Platform.environment['EVENT_MOTION_WORKFLOW'];
   for (final (name, build) in [
-    ('agent_pipeline', pipeline.build),
+    (
+      'agent_pipeline',
+      () => pipeline.build(
+        WorkflowSpec.parse(
+          File(workflow ?? 'fixtures/agent_pipeline.json').readAsStringSync(),
+        ),
+      ),
+    ),
     ('card_sequence', sequence.build),
   ]) {
     testWidgets('exports $name as MP4 and PNG', skip: !_render, (tester) async {
-      await _export(tester, build(), name);
+      final outputName = name == 'agent_pipeline' && workflow != null
+          ? 'workflow'
+          : name;
+      await _export(tester, build(), outputName);
     });
   }
 }

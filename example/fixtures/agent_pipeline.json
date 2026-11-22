@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "template": "agent_pipeline",
+  "title": "From brief to draft",
+  "subtitle": "A simulated workflow with four agents",
+  "layout": "diamond",
+  "durationMs": 4000,
+  "coverMs": 2500,
+  "nodes": [
+    {"id": "brief", "label": "Brief"},
+    {"id": "research", "label": "Research"},
+    {"id": "compose", "label": "Compose"},
+    {"id": "review", "label": "Review"}
+  ],
+  "links": [
+    {"from": "brief", "to": "research"},
+    {"from": "brief", "to": "compose"},
+    {"from": "research", "to": "review"},
+    {"from": "compose", "to": "review"}
+  ],
+  "events": [
+    {"atMs": 0, "node": "brief", "status": "active", "message": "Brief received"},
+    {"atMs": 500, "node": "brief", "status": "complete"},
+    {"atMs": 500, "node": "research", "from": "brief", "status": "active", "message": "Gathering source notes"},
+    {"atMs": 1050, "node": "compose", "from": "brief", "status": "active", "message": "Assembling the visual"},
+    {"atMs": 1625, "node": "research", "status": "complete"},
+    {"atMs": 2000, "node": "compose", "status": "complete"},
+    {"atMs": 2000, "node": "review", "from": "compose", "status": "active", "message": "Checking the draft against the brief"},
+    {"atMs": 2300, "node": "review", "from": "research", "status": "active", "message": "Checking source notes"},
+    {"atMs": 3000, "node": "review", "status": "complete", "message": "Ready for human review"}
+  ]
+}

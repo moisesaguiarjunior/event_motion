@@ -13,8 +13,8 @@ The deliverable is a local workflow that turns a brief and optional data into a 
 
 ## 2. Local authoring
 
-- [ ] Specify a versioned JSON contract for the workflow composition. Define layout presets, node IDs, timing, states and copy limits.
-- [ ] Convert the JSON into Dart values and report validation errors with field paths. Check chronology, duplicate IDs, connection references and the duration of the scene.
+- [x] Specify a versioned JSON contract for the workflow composition. Define layout presets, node IDs, timing, states and copy limits.
+- [x] Convert the JSON into Dart values and report validation errors with field paths. Check chronology, duplicate IDs, connection references and the duration of the scene.
 - [ ] Reuse or adapt Fluvie's Ollama client for the local authoring command. Save the generated spec next to the outputs so a second render can use the same inputs.
 - [ ] Run the workflow with a local model and several briefs. Compare valid-output rate, latency, readability and whether the result preserves supplied event data.
 

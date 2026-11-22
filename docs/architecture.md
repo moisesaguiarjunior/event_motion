@@ -20,4 +20,4 @@ Use HyperFrames for a scene authored in HTML or for a transparent effect. Render
 
 ## Feed a local model into a template
 
-The first example uses typed Dart fixtures. The planned authoring command will ask a local model to fill a versioned schema for a chosen composition. That schema will carry titles, node IDs, timestamps, states and messages. The command will validate the response and resolve it to the same Dart types before rendering. Measurements and event logs can be supplied as structured input alongside the editorial brief.
+The agent pipeline reads a [versioned JSON document](workflow-json.md). Its reader validates the fields, layout, references and event order before resolving the document to the existing Dart types. The planned local authoring command can use the JSON Schema to guide generation and the same reader to check the result before rendering. The card sequence uses a Dart fixture.

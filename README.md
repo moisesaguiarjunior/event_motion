@@ -53,12 +53,23 @@ The first command renders both examples. Pass `agent_pipeline` or `card_sequence
 
 Both examples share a clock adapter for a pinned Fluvie revision. The library itself depends only on Flutter.
 
+## Render a workflow from JSON
+
+Copy the [example input](example/fixtures/agent_pipeline.json) and edit its title, nodes, links and timed events. Then render it with the same command as the demo.
+
+```sh
+bash tool/render_example.sh agent_pipeline ./workflow.json
+```
+
+The command writes `workflow.mp4` and `workflow.png` to `example/build/workflow/`. Invalid input fails with the path to the field to fix. See the [workflow contract](docs/workflow-json.md) and the [JSON Schema](example/spec/workflow.v1.schema.json).
+
 ## Develop
 
 ```sh
 flutter pub get
 flutter analyze
 flutter test
+(cd example && flutter test)
 ```
 
 The [architecture notes](docs/architecture.md) describe timing, layout, and the external clip boundary. The [roadmap](docs/roadmap.md) tracks the remaining work for a local post workflow.

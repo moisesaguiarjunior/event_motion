@@ -10,10 +10,10 @@ Widget atMotionTime(
   // ignore: experimental_member_use
   return video.FrameBuilder((clock) {
     final localFrame = clock.frame - clock.scope.startFrame;
-    final elapsed = Duration(
-      microseconds: (localFrame * Duration.microsecondsPerSecond / clock.fps)
-          .round(),
-    );
-    return build(timeline.at(elapsed));
+    return build(timeline.at(motionTimeAtFrame(localFrame, clock.fps)));
   });
 }
+
+Duration motionTimeAtFrame(int frame, int fps) => Duration(
+  microseconds: (frame * Duration.microsecondsPerSecond / fps).round(),
+);
