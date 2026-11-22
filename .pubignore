@@ -6,5 +6,6 @@ build/
 coverage/
 node_modules/
 /pubspec.lock
+/example/assets/editorial_local/
 /docs/
 /references/

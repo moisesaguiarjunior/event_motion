@@ -1,3 +1,4 @@
+from base64 import b64decode
 import copy
 import json
 from pathlib import Path
@@ -9,7 +10,10 @@ from subprocess import CalledProcessError, TimeoutExpired
 from unittest.mock import patch
 
 import editorial_dots as editorial
+from illustration_assets import check_png
 from png_alt_text import DESCRIPTION, SIGNATURE, embed_alt_text
+
+ARTWORK_PNG = b64decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGNgYGBgAAAABQABpfZFQAAAAABJRU5ErkJggg==")
 
 
 def receipt(verdict, findings=None, generator_requests=None):
@@ -299,6 +303,77 @@ class EditorialTest(unittest.TestCase):
         backlog = (self.workspace / "artifacts/demandas-gerador.md").read_text()
         self.assertIn("Opus · draft-review", backlog)
         self.assertIn(self.request["acceptance"], backlog)
+
+    def test_illustration_uses_reviewed_layers_and_rejects_unverified_citations(self):
+        path = editorial.ROOT / "example/fixtures/editorial_illustration.json"
+        visual = json.loads(path.read_text())
+        plan = dict(self.plan, template="editorial_illustration")
+        draft = dict(self.draft, template="editorial_illustration", visual_json=json.dumps(visual))
+        with self.assertRaisesRegex(editorial.EditorialError, "verified source IDs"):
+            editorial.checked_draft(draft, plan)
+        plan["sources"] = [*plan["sources"], dict(plan["sources"][0], id="2")]
+        with patch.object(editorial, "render", side_effect=self.fake_render) as render:
+            report, stages = self.process({
+                "research": plan, "plan": receipt("ready"), "draft": draft,
+                "draft-review": receipt("ready"),
+            })
+        self.assertEqual(report["status"], "ready_for_review")
+        self.assertEqual(stages[-1][2]["draft"], draft)
+        expected = dict(visual, alt_text=draft["alt_text"])
+        self.assertEqual(render.call_args.args[0], expected)
+        self.assertEqual(json.loads((self.workspace / "artifacts/visual.json").read_text()), expected)
+        replay_alt = (self.workspace / "artifacts/alt-text.txt").read_text().strip()
+        self.assertEqual(replay_alt, expected["alt_text"])
+        self.assertIn("artifacts/video.mp4", report["artifacts"])
+
+        visual["annotation"]["source_ids"] = ["unknown"]
+        with self.assertRaisesRegex(editorial.EditorialError, r"annotation\.source_ids\[0\]"):
+            editorial.checked_draft(dict(draft, visual_json=json.dumps(visual)), plan)
+
+    def test_illustration_packages_only_named_local_artwork(self):
+        visual = json.loads((editorial.ROOT / "example/fixtures/editorial_illustration.json").read_text())
+        visual["destinations"][0]["asset"] = "chip.png"
+        plan = dict(self.plan, template="editorial_illustration")
+        plan["sources"] = [*plan["sources"], dict(plan["sources"][0], id="2")]
+        draft = dict(self.draft, template="editorial_illustration", visual_json=json.dumps(visual))
+        with self.assertRaisesRegex(editorial.EditorialError, "approved PNGs"):
+            editorial.checked_draft(draft, plan)
+        unsafe = copy.deepcopy(visual)
+        unsafe["destinations"][0]["asset"] = "../chip.png"
+        with self.assertRaisesRegex(editorial.EditorialError, r"destinations\[0\]\.asset"):
+            editorial.checked_draft(dict(draft, visual_json=json.dumps(unsafe)), plan, ["chip.png"])
+
+        library = self.workspace / "local-library"
+        library.mkdir()
+        png = ARTWORK_PNG
+        (library / "chip.png").write_bytes(png)
+        self.brief["illustration_assets"] = ["chip.png"]
+        with patch.object(editorial, "ILLUSTRATION_ASSET_LIBRARY", library), patch.object(
+            editorial, "render", side_effect=self.fake_render,
+        ):
+            report, _ = self.process({
+                "research": plan, "plan": receipt("ready"), "draft": draft,
+                "draft-review": receipt("ready"),
+            })
+        self.assertEqual(report["status"], "ready_for_review")
+        self.assertIn("artifacts/assets/chip.png", report["artifacts"])
+        self.assertEqual((self.workspace / "artifacts/assets/chip.png").read_bytes(), png)
+
+    def test_illustration_asset_rejects_truncated_animated_and_undecodable_png(self):
+        with self.assertRaisesRegex(ValueError, "complete PNG"):
+            check_png(ARTWORK_PNG[:33])
+
+        animated_control = b"acTL" + struct.pack(">II", 2, 0)
+        animated = (ARTWORK_PNG[:33] + struct.pack(">I", 8) + animated_control
+                    + struct.pack(">I", zlib.crc32(animated_control)) + ARTWORK_PNG[33:])
+        with self.assertRaisesRegex(ValueError, "single-frame PNG"):
+            check_png(animated)
+
+        invalid_idat = b"IDAT\0\0"
+        invalid = (ARTWORK_PNG[:33] + struct.pack(">I", 2) + invalid_idat
+                   + struct.pack(">I", zlib.crc32(invalid_idat)) + ARTWORK_PNG[-12:])
+        with self.assertRaisesRegex(ValueError, "cannot be decoded"):
+            check_png(invalid)
 
     def test_voice_block_keeps_a_private_review_packet_without_deliverable(self):
         block = receipt("revise", [{"kind": "voice", "severity": "blocking",

@@ -6,6 +6,7 @@ import 'dart:io';
 
 import '../lib/src/catalog_document.dart';
 import '../lib/src/data_story_document.dart';
+import '../lib/src/illustration_document.dart';
 import '../lib/src/matrix_document.dart';
 
 Future<void> main(List<String> args) async {
@@ -13,6 +14,7 @@ Future<void> main(List<String> args) async {
       !const {
         'data_story',
         'editorial_catalog',
+        'editorial_illustration',
         'editorial_matrix',
       }.contains(args.single)) {
     stderr.writeln(
@@ -32,6 +34,8 @@ Future<void> main(List<String> args) async {
         DataStoryChart.parse(data);
       case 'editorial_catalog':
         CatalogDocument.parse(input);
+      case 'editorial_illustration':
+        IllustrationDocument.parse(input);
       case 'editorial_matrix':
         MatrixDocument.parse(input);
     }

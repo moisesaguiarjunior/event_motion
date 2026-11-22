@@ -22,6 +22,7 @@ A ponte devolve uma pasta por tentativa em `results/<id>/attempt-<n>/artifacts/`
 | `imagem.png` | Imagem final, inclusive nas entregas com vídeo. |
 | `video.mp4` | Animação, quando prevista na entrega. |
 | `visual.json` e `alt-text.txt` | Composição editável e descrição acessível. |
+| `assets/*.png` | Camadas de arte que o `visual.json` usa, quando a pauta inclui PNGs locais aprovados. |
 | `research-notes.md` e `editorial-review.md` | Fontes, evidências, pareceres e decisões. |
 | `demandas-gerador.md` | Propostas para ampliar o gerador, quando surgirem. |
 
@@ -58,11 +59,14 @@ A referência visual tem leitura em camadas. O gráfico e a anotação contam a 
 
 ## Imagem e vídeo
 
+O [mapa de ilustrações possíveis](mapa-de-ilustracoes.md) reúne os formatos, os exemplos e os pontos de reuso para novas pautas.
+
 | Composição | Use para | Saída |
 | --- | --- | --- |
 | `data_story` | Linha, pontos pareados, rosca e barra empilhada. As composições aceitam anotação, evidências, cronologia, unidade e fontes. | PNG de 1440 × 1800 para linha e rosca. Pontos pareados e barra exportam em 1080 × 1350. A versão MP4 dura oito segundos. |
 | `editorial_catalog` | Explicações em oito a doze células, cada uma com um diagrama ilustrativo, paleta e ordem de leitura. | PNG e, quando solicitado, MP4 com destaque em sequência. |
 | `editorial_matrix` | Cronologia qualitativa com duas a quatro linhas. Data e mudança ficam ao lado de duas colunas de papéis. A matriz aceita um dado de destaque com a legenda logo abaixo. A nota de escopo e a chave de fontes ficam no rodapé. | PNG de 1440 × 1800. Com dado de destaque, exporta em 1080 × 1350. |
+| `editorial_illustration` | Canal de distribuição, rota de API ou processamento com uma origem, um canal e até dois destinos. Cartões, anotação e fontes são editáveis. As conexões acompanham o número de destinos. | PNG de 1080 × 1350. O MP4 opcional dura cinco segundos, a 24 fps, e revela a rota em ordem. |
 
 O briefing mantém a versão 1 da ponte. O pacote completo inclui imagem e o campo `infographic` permite solicitá-la explicitamente. Inclua `video` quando a animação for obrigatória. O renderer usa Flutter e Fluvie. `visual.json` reproduz a peça a partir do template registrado no parecer. [Guia de customização](casos-de-uso.md) · [Fixture da peça com dados](../example/fixtures/data_story.json)
 
@@ -71,6 +75,7 @@ bash tool/render_example.sh data_story
 bash tool/render_example.sh data_story example/fixtures/data_story_composition.json
 bash tool/render_example.sh data_story_video
 bash tool/render_example.sh editorial_matrix
+bash tool/render_example.sh editorial_illustration
 ```
 
 Em `data_story`, o campo `chart_kind` seleciona a composição. O padrão é `line`.
@@ -81,6 +86,10 @@ Em `data_story`, o campo `chart_kind` seleciona a composição. O padrão é `li
 - `composition` usa a rosca do Fluvie com duas a sete partes positivas que somam 100. `slice_groups` recebe um grupo por categoria, com `null` para as fatias independentes. Cada grupo reúne duas ou três fatias e aparece na legenda com os tons correspondentes. [Exemplo de rosca agrupada](../example/fixtures/data_story_grouped_donut.json)
 
 Em `editorial_matrix`, `hero_stat` recebe `value` e `caption`. A legenda pode incluir denominador, período, escopo e referências com os IDs do rodapé. [Exemplo de matriz com destaque](../example/fixtures/editorial_matrix_hero.json)
+
+Em `editorial_illustration`, o Sol edita `origin`, `channel`, `destinations` e, quando útil, `annotation`. O renderer desenha as conexões. O Opus recebe o JSON completo antes do render. O worker confere os IDs do rodapé com as fontes verificadas e grava o texto alternativo na imagem e no pacote. [Exemplo editável da ilustração](../example/fixtures/editorial_illustration.json)
+
+Quando uma pauta pedir arte externa, coloque os PNGs aprovados na pasta local `example/assets/editorial_local/` e inclua os nomes em `illustration_assets` no briefing JSON. Indique no briefing onde cada peça entra. O worker usa a lista para validar referências `asset` nos cartões e leva ao pacote só os PNGs usados. O JSON entregue pode ser renderizado novamente com a pasta `assets/` ao lado. [ComfyUI e render local](integrations.md#comfyui-para-camadas-de-ilustração)
 
 As exportações de pontos pareados e de barra empilhada incluem no PNG o texto alternativo da pauta e mantêm `alt-text.txt` no pacote. Nos renders manuais, a descrição pode vir do campo `alt_text` do JSON.
 

@@ -64,3 +64,13 @@ See the [command and input guide](editorial-styles.md), the [verification record
 - [x] Add faster dashboard motion and simultaneous activation groups. Verify two batches and preserve the approved standard renders.
 - [x] Fix the Social Studio activity feed and caption overlap and verify the 9:16 Story export.
 - [x] Archive the follow-up examples and publish the verified source.
+
+## 8. Dots illustration pipeline
+
+| Stage | Scope | Verification |
+| --- | --- | --- |
+| Initial integration | `editorial_illustration` exports an editable diagram, PNG, and optional silent MP4. ComfyUI supplies local PNG layers. GSAP drives the existing HyperFrames composition. | Replay the illustration from its packaged JSON and assets. Check the transparent HyperFrames clip and the Fluvie composite. |
+| Next | Produce a review contact sheet from the key frames already defined by the visual or the composition. | Prepare a 360 px contact sheet that makes missing cards, text, and overlays visible before review. |
+| After a suitable brief | Add one new arrangement or a 3D asset recipe when a technology story needs it. Compare an existing diagram with a local Three.js or Blender render when geometry is part of the explanation. | Save the fixture, reusable assets, and export command. Confirm the image reads at feed size and the source package can be replayed. |
+
+Use the normal Dots queue for editorial briefs. Validate integrations with local fixtures, then obtain an independent Astra review of the candidate before merging. Update the [illustration map](mapa-de-ilustracoes.md) with verified reuse and the conditions for each extension.

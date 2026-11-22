@@ -14,11 +14,18 @@ import sys
 from tempfile import mkdtemp
 from urllib.parse import urlsplit
 
+from illustration_assets import asset_name, read_asset, referenced_assets
+
 ROOT = Path(__file__).resolve().parent.parent
+ILLUSTRATION_ASSET_LIBRARY = ROOT / "example/assets/editorial_local"
 CODEX_MODEL = "gpt-6.2-sol"
 OPUS_MODEL = "claude-opus-5-5"
 OUTPUTS = {"post", "research_notes", "infographic", "video"}
-VISUAL_TEMPLATES = ("data_story", "editorial_catalog", "editorial_matrix")
+VISUAL_TEMPLATES = ("data_story", "editorial_catalog", "editorial_matrix", "editorial_illustration")
+ANIMATED_VARIANTS = {
+    "data_story": "data_story_video",
+    "editorial_illustration": "editorial_illustration_video",
+}
 VISUAL_ERRORS = (OSError, KeyError, TypeError, ValueError, subprocess.SubprocessError)
 
 
@@ -115,6 +122,10 @@ with up to four evidence cards and four chronological entries. editorial_catalog
 is an explanatory 8–12 cell grid with illustrative marks. editorial_matrix is
 a still 4:5 table with 2–4 dated rows, aligned role columns, a scope note and
 source key. Choose it for a short, qualitative chronology with roles to compare.
+editorial_illustration is a 4:5 diagram with separate cards for one origin,
+one channel and one or two destinations, plus an optional sourced annotation.
+Use it when the route itself explains the thesis, such as a distribution channel,
+an API gateway or a processing path. An optional silent video reveals the route.
 For parts of a whole, data_story supports a donut and a 100% stacked bar
 with a subtotal bracket. It also supports horizontal paired dots and fixed
 value axes with labeled reference lines. editorial_matrix can show a large
@@ -224,6 +235,17 @@ both operator notes within 96 characters total. Keep copy compact for phones.
 An optional hero_stat {value, caption} places a short statistic (up to 16
 characters) above the matrix. Use its caption (up to 150 characters) to state
 the denominator, scope and period, and cite a matching source ID in brackets.
+For editorial_illustration, follow its example shape. Each card has a title
+(up to 34 characters), detail (up to 58), and a symbol from organization,
+marketplace, application, compute, storage, shield, queue. Use one origin, one
+channel, and one or two destinations. Title and subtitle allow 62 and 105
+characters. Supply 1–3 verified source IDs with short labels (up to 32
+characters). The optional annotation has text (up to 105 characters) and
+source_ids from the footer. Arrows represent paths from origin through channel
+to the destinations. Use this template only when those relationships are sourced.
+A card may use asset with a filename from the brief's illustration_assets list.
+Those are approved local PNGs. Follow the brief's placement instructions and
+describe any useful artwork in alt_text. Keep symbol as the built-in alternative.
 """
 
 
@@ -437,7 +459,7 @@ def check_draft_copy(draft, plan):
         raise EditorialError("draft requires copy, sourced claims, and editorial decisions")
 
 
-def checked_draft(draft, plan):
+def checked_draft(draft, plan, allowed_assets=()):
     if not draft["alt_text"].strip():
         raise EditorialError("visual posts require alt text")
     visual = json.loads(draft["visual_json"])
@@ -446,6 +468,8 @@ def checked_draft(draft, plan):
     template = draft["template"]
     if template == "data_story":
         checked_graph(visual, plan)
+    if template == "editorial_illustration":
+        visual["alt_text"] = draft["alt_text"].strip()
     result = subprocess.run(
         ["dart", str(ROOT / "example/bin/validate_editorial.dart"), template],
         input=encode(visual), encoding="utf-8", capture_output=True,
@@ -454,10 +478,12 @@ def checked_draft(draft, plan):
     if result.returncode == 2:
         raise EditorialError(result.stderr.strip())
     result.check_returncode()
-    if template == "editorial_matrix":
+    if template in {"editorial_matrix", "editorial_illustration"}:
         verified = {source["id"] for source in plan["sources"] if source["state"] == "verified"}
         if any(source["id"] not in verified for source in visual["sources"]):
-            raise EditorialError("editorial_matrix requires verified source IDs in its footer")
+            raise EditorialError(f"{template} requires verified source IDs in its footer")
+    if template == "editorial_illustration" and not set(referenced_assets(visual)) <= set(allowed_assets):
+        raise EditorialError("illustration assets must be approved PNGs from the brief")
     return visual
 
 
@@ -474,12 +500,21 @@ def render(visual, draft, logs, artifacts):
     specification = artifacts / "visual.json"
     save(specification, visual)
     template = draft["template"]
-    if template == "data_story" and draft["media"] in {"video", "both"}:
-        template = "data_story_video"
+    if draft["media"] in {"video", "both"}:
+        template = ANIMATED_VARIANTS.get(template, template)
     output = Path(mkdtemp(prefix="render-", dir=logs))
+    if draft["template"] == "editorial_illustration" and (assets := referenced_assets(visual)):
+        specification = output / "visual.json"
+        save(specification, visual)
+        sidecars = output / "assets"
+        sidecars.mkdir()
+        for name in assets:
+            shutil.copyfile(logs / "illustration-assets" / name, sidecars / name)
     log_path = output / "render.log"
     env = os.environ.copy()
-    if visual.get("chart_kind") in {"paired_dot", "stacked_bar"}:
+    if draft["template"] == "editorial_illustration":
+        env.pop("EVENT_MOTION_EDITORIAL_ALT_TEXT", None)
+    elif visual.get("chart_kind") in {"paired_dot", "stacked_bar"}:
         env["EVENT_MOTION_EDITORIAL_ALT_TEXT"] = draft["alt_text"]
     try:
         with log_path.open("w", encoding="utf-8") as log:
@@ -600,6 +635,12 @@ def finish(workspace, brief, plan, reviews, draft=None, visual=None, reason="", 
         if visual is not None:
             save(artifacts / "visual.json", visual)
             report["artifacts"].append("artifacts/visual.json")
+            if draft["template"] == "editorial_illustration" and (assets := referenced_assets(visual)):
+                sidecars = artifacts / "assets"
+                sidecars.mkdir(exist_ok=True)
+                for name in assets:
+                    shutil.copyfile(logs / "illustration-assets" / name, sidecars / name)
+                    report["artifacts"].append(f"artifacts/assets/{name}")
         if draft["alt_text"].strip():
             write("alt-text.txt", draft["alt_text"])
         write("sources-reply.txt", sources_reply)
@@ -637,6 +678,15 @@ def finish(workspace, brief, plan, reviews, draft=None, visual=None, reason="", 
 def process(brief, workspace, models):
     outputs = check_brief(brief)
     (workspace / "artifacts").mkdir(exist_ok=True)
+    requested_assets = brief.get("illustration_assets", [])
+    if not isinstance(requested_assets, list) or len(requested_assets) > 4:
+        raise EditorialError("illustration_assets must list up to four PNG filenames")
+    allowed_assets = tuple(dict.fromkeys(asset_name(name) for name in requested_assets))
+    if allowed_assets:
+        staged = workspace / ".editorial/illustration-assets"
+        staged.mkdir(exist_ok=True)
+        for name in allowed_assets:
+            (staged / name).write_bytes(read_asset(ILLUSTRATION_ASSET_LIBRARY, name))
     context = {"brief": brief, "delivery_outputs": sorted(outputs)}
     requests = []
 
@@ -724,7 +774,7 @@ def process(brief, workspace, models):
             return deliver(plan, reviews, draft=draft, reason=draft["reason"] or "Draft needs sources.")
         def validate(proposal, ledger):
             check_visual_choice(proposal, outputs)
-            return checked_draft(proposal, ledger)
+            return checked_draft(proposal, ledger, allowed_assets)
 
         def repair_visual(proposal, error):
             repair = dict(context, previous_draft=proposal, validation_error=str(error))

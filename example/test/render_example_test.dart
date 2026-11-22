@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:alchemist/alchemist.dart' show loadFonts;
@@ -7,11 +8,15 @@ import 'package:event_motion_example/cha_de_estrelas.dart' as cha;
 import 'package:event_motion_example/comparison.dart' as comparison;
 import 'package:event_motion_example/data_story.dart' as data_story;
 import 'package:event_motion_example/editorial_catalog.dart' as editorial;
+import 'package:event_motion_example/editorial_illustration.dart'
+    as illustration;
 import 'package:event_motion_example/editorial_matrix.dart' as matrix;
 import 'package:event_motion_example/hybrid.dart' as hybrid;
 import 'package:event_motion_example/jardim_sonho.dart' as jardim;
 import 'package:event_motion_example/src/card_document.dart';
 import 'package:event_motion_example/src/catalog_document.dart';
+import 'package:event_motion_example/src/illustration_artwork.dart';
+import 'package:event_motion_example/src/illustration_document.dart';
 import 'package:event_motion_example/src/matrix_document.dart';
 import 'package:event_motion_example/src/team_document.dart';
 import 'package:event_motion_example/src/workflow_spec.dart';
@@ -37,7 +42,7 @@ void main() {
   final editorialInput = Platform.environment['EVENT_MOTION_EDITORIAL'];
   String input(String fallback) =>
       File(editorialInput ?? 'fixtures/$fallback.json').readAsStringSync();
-  for (final (name, build) in [
+  for (final (name, build) in <(String, FutureOr<Video> Function())>[
     ('jardim_sonho', () => jardim.build()),
     ('cha_de_estrelas', () => cha.build()),
     (
@@ -76,6 +81,25 @@ void main() {
       'editorial_matrix',
       () => matrix.build(MatrixDocument.parse(input('editorial_matrix'))),
     ),
+    for (final animated in [false, true])
+      (
+        animated ? 'editorial_illustration_video' : 'editorial_illustration',
+        () async {
+          final file = File(
+            editorialInput ?? 'fixtures/editorial_illustration.json',
+          );
+          final document = IllustrationDocument.parse(file.readAsStringSync());
+          final artwork = await loadIllustrationArtwork(document, file.parent);
+          for (final image in artwork.values) {
+            addTearDown(image.dispose);
+          }
+          return illustration.build(
+            document,
+            animated: animated,
+            artwork: artwork,
+          );
+        },
+      ),
     (
       'data_story',
       () => data_story.build(input('data_story'), animated: false),
@@ -107,6 +131,7 @@ void main() {
       'comparison',
       'character_poster',
       'data_story',
+      'editorial_illustration',
       'editorial_matrix',
     }.contains(name);
     final formats = imageOnly ? 'PNG' : 'MP4 and PNG';
@@ -116,7 +141,8 @@ void main() {
           : name == 'comparison' && material != null
           ? 'comparison-$material'
           : name;
-      await _export(tester, build(), outputName, imageOnly: imageOnly);
+      final video = await tester.runAsync(() async => await build());
+      await _export(tester, video!, outputName, imageOnly: imageOnly);
     });
   }
 }
@@ -164,6 +190,8 @@ Future<void> _export(
       'workflow' => Platform.environment['EVENT_MOTION_WORKFLOW_OUT'],
       'hybrid' => Platform.environment['EVENT_MOTION_HYBRID_OUT'],
       'editorial_catalog' ||
+      'editorial_illustration' ||
+      'editorial_illustration_video' ||
       'editorial_matrix' ||
       'character_poster' ||
       'character_dashboard' ||
