@@ -4,9 +4,13 @@ import 'package:alchemist/alchemist.dart' show loadFonts;
 import 'package:event_motion_example/agent_pipeline.dart' as pipeline;
 import 'package:event_motion_example/card_sequence.dart' as sequence;
 import 'package:event_motion_example/comparison.dart' as comparison;
+import 'package:event_motion_example/editorial_catalog.dart' as editorial;
 import 'package:event_motion_example/hybrid.dart' as hybrid;
 import 'package:event_motion_example/src/card_document.dart';
+import 'package:event_motion_example/src/catalog_document.dart';
+import 'package:event_motion_example/src/team_document.dart';
 import 'package:event_motion_example/src/workflow_spec.dart';
+import 'package:event_motion_example/workshop_team.dart' as workshop;
 import 'package:fluvie/fluvie.dart' show Video;
 import 'package:fluvie/rendering.dart';
 import 'package:flutter/widgets.dart';
@@ -25,6 +29,9 @@ void main() {
   final cards =
       Platform.environment['EVENT_MOTION_CARDS'] ?? 'fixtures/cards.json';
   final clip = Platform.environment['EVENT_MOTION_HYBRID_CLIP'];
+  final editorialInput = Platform.environment['EVENT_MOTION_EDITORIAL'];
+  String input(String fallback) =>
+      File(editorialInput ?? 'fixtures/$fallback.json').readAsStringSync();
   for (final (name, build) in [
     (
       'agent_pipeline',
@@ -54,6 +61,18 @@ void main() {
             : CraftMaterial.values.byName(material),
       ),
     ),
+    (
+      'editorial_catalog',
+      () => editorial.build(CatalogDocument.parse(input('editorial_catalog'))),
+    ),
+    (
+      'character_poster',
+      () => workshop.buildPoster(TeamDocument.parse(input('workshop_team'))),
+    ),
+    (
+      'character_dashboard',
+      () => workshop.buildDashboard(TeamDocument.parse(input('workshop_team'))),
+    ),
     if (clip != null)
       (
         'hybrid',
@@ -65,19 +84,15 @@ void main() {
         ),
       ),
   ]) {
-    final formats = name == 'comparison' ? 'PNG' : 'MP4 and PNG';
+    final imageOnly = name == 'comparison' || name == 'character_poster';
+    final formats = imageOnly ? 'PNG' : 'MP4 and PNG';
     testWidgets('exports $name as $formats', skip: !_render, (tester) async {
       final outputName = name == 'agent_pipeline' && workflow != null
           ? 'workflow'
           : name == 'comparison' && material != null
           ? 'comparison-$material'
           : name;
-      await _export(
-        tester,
-        build(),
-        outputName,
-        imageOnly: name == 'comparison',
-      );
+      await _export(tester, build(), outputName, imageOnly: imageOnly);
     });
   }
 }
@@ -112,6 +127,8 @@ Future<void> _export(
     final customOutput = switch (name) {
       'workflow' => Platform.environment['EVENT_MOTION_WORKFLOW_OUT'],
       'hybrid' => Platform.environment['EVENT_MOTION_HYBRID_OUT'],
+      'editorial_catalog' || 'character_poster' || 'character_dashboard' =>
+        Platform.environment['EVENT_MOTION_EDITORIAL_OUT'],
       _ => null,
     };
     final destination = Directory(customOutput ?? 'build/$name')

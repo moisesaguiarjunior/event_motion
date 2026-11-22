@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Event Motion editorial catalog v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "title", "subtitle", "tiles", "order"],
+  "properties": {
+    "version": {"const": 1},
+    "title": {"type": "string", "minLength": 1, "maxLength": 40},
+    "subtitle": {"type": "string", "minLength": 1, "maxLength": 88},
+    "tiles": {"type":"array", "minItems":8, "maxItems":12, "items":{"$ref":"#/$defs/tile"}},
+    "order": {"type":"array", "minItems":8, "maxItems":12, "uniqueItems":true, "items":{"$ref":"#/$defs/id"}}
+  },
+  "$defs": {
+    "id": {"type":"string", "pattern":"^[a-z][a-z0-9_-]{0,23}$"},
+    "tile": {
+      "type":"object", "additionalProperties":false,
+      "required":["id","title","note","diagram"],
+      "properties":{
+        "id":{"$ref":"#/$defs/id"},
+        "title":{"type":"string", "minLength":1, "maxLength":22},
+        "note":{"type":"string", "minLength":1, "maxLength":43},
+        "diagram":{"enum":["flow","bars","curve","orbit"]}
+      }
+    }
+  }
+}

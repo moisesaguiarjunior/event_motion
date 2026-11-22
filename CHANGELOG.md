@@ -1,3 +1,9 @@
+# 0.2.0
+
+- Add an animated editorial grid with eight to twelve tiles, four miniature diagrams, and local Ollama authoring.
+- Add a character poster and an animated dashboard based on the same team document.
+- Verify the new 1080 × 1350 renders in CI and document the local visual reference library.
+
 # 0.1.0
 
 - Provide frame-driven Flutter diagrams, connection pulses, event feeds, and optional localized status captions.

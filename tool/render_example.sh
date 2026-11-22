@@ -6,6 +6,8 @@ unset EVENT_MOTION_WORKFLOW_OUT
 unset EVENT_MOTION_AUDIO
 unset EVENT_MOTION_MATERIAL
 unset EVENT_MOTION_CARDS
+unset EVENT_MOTION_EDITORIAL
+unset EVENT_MOTION_EDITORIAL_OUT
 
 absolute_path() {
   case "$1" in
@@ -18,6 +20,23 @@ case "$#:${1:-}" in
   0:) set -- --name 'exports (agent_pipeline|card_sequence) as MP4 and PNG' ;;
   1:agent_pipeline|1:card_sequence|1:activation) set -- --plain-name "exports $1 as MP4 and PNG" ;;
   1:comparison) set -- --plain-name 'exports comparison as PNG' ;;
+  [123]:editorial_catalog|[123]:character_poster|[123]:character_dashboard)
+    if [[ $# -ge 2 ]]; then
+      if [[ ! -f "$2" ]]; then
+        printf 'Editorial input not found: %s\n' "$2" >&2
+        exit 2
+      fi
+      EVENT_MOTION_EDITORIAL=$(absolute_path "$2")
+      export EVENT_MOTION_EDITORIAL
+    fi
+    if [[ $# -eq 3 ]]; then
+      EVENT_MOTION_EDITORIAL_OUT=$(absolute_path "$3")
+      export EVENT_MOTION_EDITORIAL_OUT
+    fi
+    formats='MP4 and PNG'
+    if [[ "$1" = character_poster ]]; then formats='PNG'; fi
+    set -- --plain-name "exports $1 as $formats"
+    ;;
   2:card_sequence)
     if [[ ! -f "$2" ]]; then
       printf 'Card file not found: %s\n' "$2" >&2
@@ -58,6 +77,7 @@ case "$#:${1:-}" in
     ;;
   *)
     printf '%s\n' 'Usage: bash tool/render_example.sh [agent_pipeline [workflow.json [output-directory]]|card_sequence [cards.json]|activation [audio.wav]|comparison [paper|linen]]' >&2
+    printf '%s\n' '       bash tool/render_example.sh editorial_catalog|character_poster|character_dashboard [input.json [output-directory]]' >&2
     exit 2
     ;;
 esac

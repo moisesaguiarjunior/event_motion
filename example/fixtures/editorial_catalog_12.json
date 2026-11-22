@@ -1,0 +1,93 @@
+{
+  "version": 1,
+  "title": "Como uma boa ideia vira uma história",
+  "subtitle": "Cada quadro propõe uma decisão para sair da pesquisa e chegar à publicação.",
+  "tiles": [
+    {
+      "id": "pauta",
+      "title": "Pauta",
+      "note": "Escolha a pergunta.",
+      "diagram": "orbit"
+    },
+    {
+      "id": "fontes",
+      "title": "Fontes",
+      "note": "Anote a origem de cada dado.",
+      "diagram": "flow"
+    },
+    {
+      "id": "roteiro",
+      "title": "Roteiro",
+      "note": "Ordene as ideias.",
+      "diagram": "curve"
+    },
+    {
+      "id": "dados",
+      "title": "Dados",
+      "note": "Compare na mesma escala.",
+      "diagram": "bars"
+    },
+    {
+      "id": "layout",
+      "title": "Layout",
+      "note": "Dê espaço à ideia principal.",
+      "diagram": "orbit"
+    },
+    {
+      "id": "movimento",
+      "title": "Movimento",
+      "note": "Mostre o que muda.",
+      "diagram": "curve"
+    },
+    {
+      "id": "revisao",
+      "title": "Revisão",
+      "note": "Confira texto e números.",
+      "diagram": "flow"
+    },
+    {
+      "id": "capa",
+      "title": "Capa",
+      "note": "Escolha o quadro que explica.",
+      "diagram": "bars"
+    },
+    {
+      "id": "contexto-local",
+      "title": "Contexto e repertório",
+      "note": "Procure um exemplo perto do seu público.",
+      "diagram": "orbit"
+    },
+    {
+      "id": "teste-de-compreensao",
+      "title": "Teste de compreensão",
+      "note": "Peça a alguém para recontar a ideia.",
+      "diagram": "bars"
+    },
+    {
+      "id": "readaptacao",
+      "title": "Reescrita da abertura",
+      "note": "Ajuste a pergunta com as novas dúvidas.",
+      "diagram": "curve"
+    },
+    {
+      "id": "distribuicao",
+      "title": "Distribuição e retorno",
+      "note": "Anote o que funcionou no envio.",
+      "diagram": "flow"
+    }
+  ],
+  "order": [
+    "distribuicao",
+    "readaptacao",
+    "teste-de-compreensao",
+    "contexto-local",
+    "capa",
+    "revisao",
+    "movimento",
+    "layout",
+    "dados",
+    "roteiro",
+    "fontes",
+    "pauta"
+  ]
+}

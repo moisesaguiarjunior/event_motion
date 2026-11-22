@@ -6,3 +6,6 @@ build/
 coverage/
 node_modules/
 /pubspec.lock
+/references/01-fontes/
+/references/02-event-motion-v0.1.0/
+/references/03-novas-composicoes/

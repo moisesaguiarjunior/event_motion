@@ -1,6 +1,6 @@
 name: event_motion
 description: Frame-driven Flutter widgets for animating events, connections, and status changes.
-version: 0.1.0
+version: 0.2.0
 repository: https://github.com/moisesaguiarjunior/event_motion
 topics:
   - animation

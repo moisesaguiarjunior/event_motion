@@ -55,6 +55,16 @@ The first command renders both examples. Pass `agent_pipeline` or `card_sequence
 
 The activation example adds Portuguese captions and a 1080 × 1350 export. Pass a local `audio.wav` as its second argument to include sound. The comparison exports a PNG at the same size with a common bar scale, ranges, and source notes. Choose `paper`, `linen`, or the default flat surface. The examples use pinned Fluvie and Handcrafted revisions. The library itself depends only on Flutter.
 
+## Make an editorial post
+
+```sh
+bash tool/render_example.sh editorial_catalog
+bash tool/render_example.sh character_poster
+bash tool/render_example.sh character_dashboard
+```
+
+The grid highlights eight to twelve illustrated notes in order and exports the complete grid as a cover. The character poster and animated dashboard share one team file. The dashboard shows signal paths, contextual callouts, an activity feed, and completion. All three use a 1080 × 1350 canvas. See the [input templates, local authoring command, and visual references](docs/editorial-styles.md).
+
 ## Render a workflow from JSON
 
 Copy the [example input](example/fixtures/agent_pipeline.json) and edit its title, nodes, links and timed events. Then render it with the same command as the demo.

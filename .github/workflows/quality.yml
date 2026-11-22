@@ -44,3 +44,18 @@ jobs:
           ffprobe -v error -select_streams v:0 -show_entries stream=width,height,nb_frames \
             -of csv=p=0 example/build/agent_pipeline/agent_pipeline.mp4 | grep -Fx '480,600,96'
           test -s example/build/agent_pipeline/agent_pipeline.png
+      - name: Render the editorial compositions
+        run: |
+          for composition in editorial_catalog character_poster character_dashboard; do
+            bash tool/render_example.sh "$composition"
+            ffprobe -v error -select_streams v:0 -show_entries stream=width,height \
+              -of csv=p=0 "example/build/$composition/$composition.png" | grep -Fx '1080,1350'
+          done
+          ffprobe -v error -select_streams v:0 -show_entries stream=width,height,nb_frames \
+            -of csv=p=0 example/build/editorial_catalog/editorial_catalog.mp4 | grep -Fx '1080,1350,180'
+          ffprobe -v error -select_streams v:0 -show_entries stream=width,height,nb_frames \
+            -of csv=p=0 example/build/character_dashboard/character_dashboard.mp4 | grep -Fx '1080,1350,192'
+          test ! -e example/build/character_poster/character_poster.mp4
+          bash tool/render_example.sh editorial_catalog example/fixtures/editorial_catalog_12.json example/build/editorial_catalog_12
+          ffprobe -v error -select_streams v:0 -show_entries stream=width,height,nb_frames \
+            -of csv=p=0 example/build/editorial_catalog_12/editorial_catalog.mp4 | grep -Fx '1080,1350,252'

@@ -45,3 +45,15 @@ The deliverable is a local workflow that turns a brief and optional data into a 
 - [x] Choose the release license, check bundled assets and dependencies, and review the release candidate before publishing the package.
 
 See the [verification record](verification.md) for the clean-checkout render, model evaluation, adoption test, and package dry run.
+
+## 6. Editorial motion and character compositions
+
+- [x] Assemble the eight reference posts and the completed v0.1.0 examples in a local reference folder. Record original sources and visual notes.
+- [x] Build an editorial grid with eight to twelve cells, native text, and animated miniature diagrams. Export a guided MP4 and a complete PNG poster from the same document.
+- [x] Connect the grid to local Ollama authoring. Validate cell IDs, diagram types, copy lengths, and highlight order before capture.
+- [x] Build a set of original Handcrafted characters and export an editorial character poster driven by a team document.
+- [x] Use the same characters in an animated dashboard with curved signals, an event feed, progress totals, and an ending summary.
+- [x] Check phone-size readability, the beginning and end states of each composition, motion at intermediate frames, repeatability, and the existing v0.1.0 examples.
+- [x] Check the new headless exports in CI, version the verified source, and assemble the local reference library with the final artifacts.
+
+See the [command and input guide](editorial-styles.md), the [verification record](verification.md#editorial-compositions-in-020), and the [reference library](../references/README.md).

@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "title": "Um post, oito decisões",
+  "subtitle": "Da pergunta inicial à checagem final.",
+  "tiles": [
+    {"id":"pauta", "title":"Pauta", "note":"Escolha a pergunta.", "diagram":"orbit"},
+    {"id":"fontes", "title":"Fontes", "note":"Anote a origem de cada dado.", "diagram":"flow"},
+    {"id":"roteiro", "title":"Roteiro", "note":"Ordene as ideias.", "diagram":"curve"},
+    {"id":"dados", "title":"Dados", "note":"Compare na mesma escala.", "diagram":"bars"},
+    {"id":"layout", "title":"Layout", "note":"Dê espaço à ideia principal.", "diagram":"orbit"},
+    {"id":"movimento", "title":"Movimento", "note":"Mostre o que muda.", "diagram":"curve"},
+    {"id":"revisao", "title":"Revisão", "note":"Confira texto e números.", "diagram":"flow"},
+    {"id":"capa", "title":"Capa", "note":"Escolha o quadro que explica.", "diagram":"bars"}
+  ],
+  "order": ["pauta", "fontes", "roteiro", "dados", "layout", "movimento", "revisao", "capa"]
+}

@@ -41,3 +41,21 @@ Eight samples from the agent panel passed Social Studio's Story job validator an
 The automated checks cover formatting, analysis, six library tests, thirteen example tests, and a headless export of the 96-frame agent workflow. The GitHub workflow ran on Ubuntu 24.04 with Flutter 3.47.9. [Passing Quality run](https://github.com/moisesaguiarjunior/event_motion/actions/runs/44973728685)
 
 The Flutter package candidate is `0.1.0` under MIT. `flutter pub publish --dry-run` validated the 47 KB archive with zero warnings. The archive contains the Flutter source, synthetic fixtures and tools. Generated media, fonts and installed dependencies stayed outside the package. `npm audit` reported zero known advisories for the pinned HyperFrames dependency tree during verification. See the [dependency and asset provenance](compatibility.md).
+
+## Editorial compositions in 0.2.0
+
+| Composition | PNG | MP4 at 24 fps |
+| --- | --- | ---: |
+| Eight-tile editorial grid | 1080 × 1350 | 180 frames |
+| Twelve-tile editorial grid | 1080 × 1350 | 252 frames |
+| Character poster | 1080 × 1350 | — |
+| Character dashboard | 1080 × 1350 | 192 frames |
+| Grid authored from a brief | 1080 × 1350 | 180 frames |
+
+The covers were reviewed at 360 pixels wide. Sampled frames cover the initial layout, tile focus and internal diagram changes, curved signals and callouts, and the end states with every step complete. A long-text, reverse-order twelve-tile render caught a layout overflow. The compact three-column layout keeps room for diagrams and the twelve-tile render now runs in CI.
+
+The original three compositions and the grid from the saved model JSON produced byte-identical PNG and MP4 outputs on local replay. The v0.1.0 agent pipeline and card sequence also matched both archived files. The comparison PNGs and activation cover matched their archives.
+
+The first catalog model run exceeded the note limit. Direct length constraints in the Ollama schema and shorter instructions fixed that failure. With the final [Portuguese brief](../example/fixtures/briefs/editorial-catalog.txt), local `qwen3.5:4b` produced the requested “Como nasce um fio” title and eight complete notes on the first attempt in 8.80 seconds, before rendering. A stub test covers semantic repair of a repeated ID and refusal to replace an existing catalog.
+
+The [reference library index](../references/README.md) credits the source posts. Its local folders also contain the source media, archived exports, contact sheets, and editable final documents.
