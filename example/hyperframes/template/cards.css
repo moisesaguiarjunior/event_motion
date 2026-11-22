@@ -1,0 +1,42 @@
+@font-face {
+  font-family: JetBrains;
+  src: url(regular.ttf);
+  font-weight: 400;
+}
+@font-face {
+  font-family: JetBrains;
+  src: url(bold.ttf);
+  font-weight: 700;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: transparent; }
+#composition { overflow: hidden; position: absolute; inset: 0; }
+#composition.opaque { background: #f4efe6; }
+#page {
+  position: absolute;
+  width: 480px;
+  height: 600px;
+  color: #202c2f;
+  font-family: JetBrains, monospace;
+  transform-origin: 0 0;
+}
+#title, #subtitle, #status { position: absolute; margin: 0; left: 30px; }
+#title { top: 41px; font-size: 35px; font-weight: 700; }
+#subtitle { top: 95px; font-size: 16px; }
+#deck { position: absolute; left: 30px; top: 136px; width: 420px; height: 400px; perspective: 900px; }
+#status { bottom: 29px; font-size: 13px; }
+#status::before { content: ""; display: inline-block; width: 24px; height: 2px; background: #a73524; margin-right: 10px; vertical-align: middle; }
+.overlay :is(#title, #subtitle, #status) { display: none; }
+.card {
+  position: absolute;
+  border: 1px solid color-mix(in srgb, var(--accent) 46%, transparent);
+  border-radius: 16px;
+  background: #fffbf4;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.card h2, .card p { margin: 0; line-height: 1.15; }
+.card h2 { color: var(--accent); overflow: hidden; white-space: nowrap; }
+.card p { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.card canvas { min-height: 0; width: 100%; flex: 1; display: block; margin-top: 5px; border-radius: 7px; background: color-mix(in srgb, var(--accent) 8%, transparent); }

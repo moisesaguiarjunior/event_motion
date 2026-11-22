@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "template": "agent_pipeline",
+  "title": "Da pauta à revisão final",
+  "subtitle": "Demonstração com eventos simulados",
+  "locale": "pt-BR",
+  "layout": "diamond",
+  "durationMs": 4500,
+  "coverMs": 2970,
+  "nodes": [
+    {"id": "brief", "label": "Ler a pauta"},
+    {"id": "sources", "label": "Organizar fontes"},
+    {"id": "draft", "label": "Montar rascunho"},
+    {"id": "review", "label": "Revisar evidências"}
+  ],
+  "links": [
+    {"from": "brief", "to": "sources"},
+    {"from": "sources", "to": "draft"},
+    {"from": "draft", "to": "review"}
+  ],
+  "events": [
+    {"atMs": 0, "node": "brief", "status": "active", "message": "Pauta recebida"},
+    {"atMs": 650, "node": "brief", "status": "complete"},
+    {"atMs": 650, "node": "sources", "from": "brief", "status": "active", "message": "Agrupando referências"},
+    {"atMs": 1580, "node": "sources", "status": "complete"},
+    {"atMs": 1580, "node": "draft", "from": "sources", "status": "active", "message": "Preparando a primeira versão"},
+    {"atMs": 2720, "node": "draft", "status": "complete"},
+    {"atMs": 2720, "node": "review", "from": "draft", "status": "active", "message": "Checando afirmações e fontes"},
+    {"atMs": 3800, "node": "review", "status": "complete", "message": "Pronto para revisão humana"}
+  ]
+}

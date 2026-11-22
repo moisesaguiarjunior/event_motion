@@ -20,4 +20,4 @@ Use HyperFrames for a scene authored in HTML or for a transparent effect. Render
 
 ## Feed a local model into a template
 
-The agent pipeline reads a [versioned JSON document](workflow-json.md). Its reader validates the fields, layout, references and event order before resolving the document to the existing Dart types. The planned local authoring command can use the JSON Schema to guide generation and the same reader to check the result before rendering. The card sequence uses a Dart fixture.
+The agent pipeline reads a [versioned JSON document](workflow-json.md). A plain Dart reader validates the fields, layout, references and event order. The Flutter adapter turns the validated data into a diagram and timeline. The local authoring command uses the same reader to check model output before rendering. The two card sequence renderers read a shared document for copy, color, and timing.

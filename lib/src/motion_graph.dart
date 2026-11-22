@@ -76,6 +76,8 @@ class MotionGraph extends StatelessWidget {
     required this.frame,
     this.accent = const Color(0xFF4DE2BA),
     this.pulseDuration = const Duration(milliseconds: 650),
+    this.statusLabel,
+    this.cardSize,
     this.nodeBuilder,
   }) : assert(pulseDuration > Duration.zero);
 
@@ -83,6 +85,12 @@ class MotionGraph extends StatelessWidget {
   final MotionFrame frame;
   final Color accent;
   final Duration pulseDuration;
+
+  /// Localizes the caption in the default card.
+  final String Function(MotionStatus status)? statusLabel;
+
+  /// Preferred card dimensions, limited by the graph's available space.
+  final Size? cardSize;
 
   /// Supplies a card inside the same bounds used by the default card.
   final Widget Function(
@@ -102,10 +110,23 @@ class MotionGraph extends StatelessWidget {
       }
       final size = constraints.biggest;
       if (size.isEmpty) return const SizedBox.shrink();
-      final card = Size(
-        math.min(156, size.width * 0.29),
-        math.min(64, size.height * 0.27),
-      );
+      final preferred = cardSize;
+      if (preferred != null && (!preferred.isFinite || preferred.isEmpty)) {
+        throw ArgumentError.value(
+          preferred,
+          'cardSize',
+          'Must be finite and positive.',
+        );
+      }
+      final card = preferred == null
+          ? Size(
+              math.min(156, size.width * 0.29),
+              math.min(64, size.height * 0.27),
+            )
+          : Size(
+              math.min(size.width, preferred.width),
+              math.min(size.height, preferred.height),
+            );
       final centers = {
         for (final node in diagram.nodes)
           node.id: Offset(
@@ -145,7 +166,12 @@ class MotionGraph extends StatelessWidget {
   Widget _buildNode(BuildContext context, MotionNode node) {
     final status = frame.statusOf(node.id);
     return nodeBuilder?.call(context, node, status) ??
-        _NodeCard(label: node.label, status: status, accent: accent);
+        _NodeCard(
+          label: node.label,
+          status: status,
+          accent: accent,
+          caption: statusLabel?.call(status),
+        );
   }
 }
 
@@ -154,15 +180,17 @@ class _NodeCard extends StatelessWidget {
     required this.label,
     required this.status,
     required this.accent,
+    required this.caption,
   });
 
   final String label;
   final MotionStatus status;
   final Color accent;
+  final String? caption;
 
   @override
   Widget build(BuildContext context) {
-    final (caption, color) = switch (status) {
+    final (defaultCaption, color) = switch (status) {
       MotionStatus.idle => ('Ready', const Color(0xFF99A8BF)),
       MotionStatus.active => ('Running', accent),
       MotionStatus.complete => ('Done', accent),
@@ -193,7 +221,10 @@ class _NodeCard extends StatelessWidget {
                 label,
                 style: const TextStyle(color: Color(0xFFF1F6FF), fontSize: 16),
               ),
-              Text(caption, style: TextStyle(color: color, fontSize: 12)),
+              Text(
+                caption ?? defaultCaption,
+                style: TextStyle(color: color, fontSize: 12),
+              ),
             ],
           ),
         ),

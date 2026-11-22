@@ -9,6 +9,7 @@
     "template": {"const": "agent_pipeline"},
     "title": {"$ref": "#/$defs/copy", "maxLength": 36},
     "subtitle": {"$ref": "#/$defs/copy", "maxLength": 72},
+    "locale": {"enum": ["en", "pt-BR"], "default": "en"},
     "layout": {"enum": ["diamond", "vertical"]},
     "durationMs": {"type": "integer", "minimum": 250, "maximum": 60000},
     "coverMs": {"$ref": "#/$defs/timeMs"},

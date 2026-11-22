@@ -1,0 +1,46 @@
+name: Quality
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  flutter:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          flutter-version: '3.47.9'
+          channel: stable
+          cache: true
+      - name: Resolve packages
+        run: |
+          flutter pub get --no-example
+          (cd example && flutter pub get --enforce-lockfile)
+      - name: Analyze and test
+        run: |
+          dart format --output=none --set-exit-if-changed lib test example/bin example/lib example/test
+          flutter analyze --no-pub
+          flutter test --no-pub
+          (cd example && flutter test --no-pub)
+      - name: Install FFmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - name: Render the representative workflow
+        run: |
+          bash tool/render_example.sh agent_pipeline
+          ffprobe -v error -select_streams v:0 -show_entries stream=width,height,nb_frames \
+            -of csv=p=0 example/build/agent_pipeline/agent_pipeline.mp4 | grep -Fx '480,600,96'
+          test -s example/build/agent_pipeline/agent_pipeline.png

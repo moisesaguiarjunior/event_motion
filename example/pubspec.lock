@@ -49,6 +49,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.6.1"
+  clipper2:
+    dependency: transitive
+    description:
+      name: clipper2
+      sha256: eddedb18c8ad4beaa35e77e0493c1797ef728d8d594223e684c42f9a4bb2df13
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.3"
   clock:
     dependency: transitive
     description:
@@ -147,6 +155,15 @@ packages:
       url: "https://github.com/moisesaguiarjunior/fluvie.git"
     source: git
     version: "0.3.1+socialstudio.2"
+  handcrafted_flutter:
+    dependency: "direct main"
+    description:
+      path: "."
+      ref: "9eda99d2d4e12b849733b8962a2ebe3b178ff562"
+      resolved-ref: "9eda99d2d4e12b849733b8962a2ebe3b178ff562"
+      url: "https://github.com/moisesaguiarjunior/handcrafted_flutter.git"
+    source: git
+    version: "0.4.0"
   highlight:
     dependency: transitive
     description:

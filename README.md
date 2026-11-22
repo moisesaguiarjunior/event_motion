@@ -4,7 +4,7 @@ Flutter widgets for showing what happened and when. Describe the events once, th
 
 ## Use it
 
-Add `event_motion` as a [local path dependency](https://dart.dev/tools/pub/dependencies#path-packages) while the package is in development. Import `package:event_motion/event_motion.dart` alongside `package:flutter/widgets.dart`.
+Add `event_motion` as a [Git or local path dependency](https://dart.dev/tools/pub/dependencies) in a Flutter app. Import `package:event_motion/event_motion.dart` alongside `package:flutter/widgets.dart`. See [compatibility and API scope](docs/compatibility.md).
 
 ```dart
 final diagram = MotionDiagram(
@@ -44,6 +44,8 @@ Run from the repository root with Flutter 3.44 or newer and FFmpeg available on 
 ```sh
 bash tool/render_example.sh
 bash tool/render_example.sh card_sequence
+bash tool/render_example.sh activation
+bash tool/render_example.sh comparison paper
 ```
 
 The first command renders both examples. Pass `agent_pipeline` or `card_sequence` to render one. Each writes an MP4 and a PNG under `example/build/<name>/` at 480 × 600 and 24 fps.
@@ -51,7 +53,7 @@ The first command renders both examples. Pass `agent_pipeline` or `card_sequence
 - [Agent pipeline](example/lib/agent_pipeline.dart) shows state changes, pulses and an activity feed over four seconds.
 - [Card sequence](example/lib/card_sequence.dart) brings each card into focus, then arranges the four cards in a mosaic over seven seconds.
 
-Both examples share a clock adapter for a pinned Fluvie revision. The library itself depends only on Flutter.
+The activation example adds Portuguese captions and a 1080 × 1350 export. Pass a local `audio.wav` as its second argument to include sound. The comparison exports a PNG at the same size with a common bar scale, ranges, and source notes. Choose `paper`, `linen`, or the default flat surface. The examples use pinned Fluvie and Handcrafted revisions. The library itself depends only on Flutter.
 
 ## Render a workflow from JSON
 
@@ -61,7 +63,17 @@ Copy the [example input](example/fixtures/agent_pipeline.json) and edit its titl
 bash tool/render_example.sh agent_pipeline ./workflow.json
 ```
 
-The command writes `workflow.mp4` and `workflow.png` to `example/build/workflow/`. Invalid input fails with the path to the field to fix. See the [workflow contract](docs/workflow-json.md) and the [JSON Schema](example/spec/workflow.v1.schema.json).
+The command writes `workflow.mp4` and `workflow.png` to `example/build/workflow/` or to a directory you supply as the last argument. Invalid input fails with the path to the field to fix. See the [workflow contract](docs/workflow-json.md) and the [JSON Schema](example/spec/workflow.v1.schema.json).
+
+## Generate a workflow with a local model
+
+With Ollama running and `qwen3.5:4b` installed, run the authoring command from the checkout.
+
+```sh
+bash tool/author_workflow.sh example/fixtures/briefs/newsletter.txt example/build/my-post
+```
+
+The command writes an editable JSON spec, a video, and a cover alongside one another. Supply a workflow JSON as a third argument to keep a supplied event log intact. See [local authoring](docs/local-authoring.md) and [the HyperFrames and Social Studio examples](docs/integrations.md).
 
 ## Develop
 
@@ -72,4 +84,4 @@ flutter test
 (cd example && flutter test)
 ```
 
-The [architecture notes](docs/architecture.md) describe timing, layout, and the external clip boundary. The [roadmap](docs/roadmap.md) tracks the remaining work for a local post workflow.
+See the [architecture](docs/architecture.md), [roadmap](docs/roadmap.md), and [verification results](docs/verification.md).

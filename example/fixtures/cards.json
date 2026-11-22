@@ -1,0 +1,13 @@
+{
+  "title": "From idea to post",
+  "subtitle": "Four steps to a visual draft",
+  "durationMs": 7000,
+  "mosaicMs": 5350,
+  "coverMs": 6500,
+  "cards": [
+    {"id": "outline", "title": "Outline", "caption": "Give the idea a clear sequence.", "color": "#A73524", "atMs": 0},
+    {"id": "layout", "title": "Layout", "caption": "Make each point easy to scan.", "color": "#306545", "atMs": 1300},
+    {"id": "motion", "title": "Motion", "caption": "Show what changes over time.", "color": "#54418D", "atMs": 2600},
+    {"id": "export", "title": "Export", "caption": "Pick a frame and export the clip.", "color": "#2D5874", "atMs": 3900}
+  ]
+}

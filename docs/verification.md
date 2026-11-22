@@ -1,0 +1,35 @@
+# Verification
+
+The local tests used an Apple M1 Max with 32 GB of memory, Flutter 3.47.9, Ollama 0.40.17, and the HyperFrames version pinned in the lockfile. Render durations are observations from one machine and include tool startup where specified.
+
+## Model and layout
+
+| Brief | Valid attempt | Authoring time | Result |
+| --- | ---: | ---: | --- |
+| [Newsletter](../example/fixtures/briefs/newsletter.txt) | 1 | 25.23 s | Three-stage vertical story with the requested heading. |
+| [Script review](../example/fixtures/briefs/script-review.txt) | 1 | 30.13 s | Four-stage diamond with Portuguese status captions. The model misspelled one word in the title. |
+| [Locked review](../example/fixtures/briefs/locked-review.txt) | 1 | 2.03 s | All fields besides title and subtitle matched the supplied workflow. |
+
+All three accepted specs exported a PNG and an MP4. Replaying the locked spec produced byte-identical outputs. A follow-up brief supplying the exact Portuguese title also passed on its first attempt and reproduced the title correctly in 16.15 s. Structural validity and spelling are separate review checks. The test suite also exercises repair after an invalid model response using a local stub server.
+
+Rendered samples were checked at 360 pixels wide with short and long Portuguese copy, the diamond and vertical layouts, and the paper comparison. The vertical template assigns wider cards with a consistent gap when a long heading takes more space. The 1080 × 1350 activation covers an active review and includes an optional AAC track from a synthetic WAVE file. The comparison image uses a common scale for all bars and measures both ends of each interval from that scale.
+
+## Matching card renders
+
+| 480 × 600, seven seconds at 24 fps | Observed export |
+| --- | ---: |
+| Flutter and FFmpeg | 5.17 s for PNG and MP4, including command startup |
+| HyperFrames | 35.15 s for MP4, including local Chrome startup |
+
+The Flutter example reuses its existing frame widgets and render harness. The HyperFrames example needs a separate HTML layout, CSS and a time-driven canvas painter. Both read the same four-card fixture and show the focus, rail and final mosaic. Visually, the covers share the layout and typography. The browser version places the top row slightly higher and uses squared preview marks in some illustrations. Flutter is the simpler path for this template. HyperFrames is useful when the scene already exists as HTML or needs browser animation.
+
+## Hybrid and adoption
+
+The transparent and opaque imports were tested at 1080 × 1350. Each source had 168 frames and the Fluvie result had 186. In the transparent result, sampled opaque pixels at source frame 24 matched composite frame 42 within the comparison tolerance. The Flutter background remained visible outside the cards. In the opaque result, decoded audio was silent before the 750 ms introduction ended and present after the clip began.
+
+| Full-size stage | HyperFrames | Fluvie and probe | Source clip | Raw Flutter capture | Final MP4 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Transparent | 8.89 s | 31.45 s | 263,536 B | 1,084,752,000 B | 158,791 B |
+| Opaque with sound | 18.39 s | 23.04 s | 970,715 B | 1,084,752,000 B | 754,565 B |
+
+Eight samples from the agent panel passed Social Studio's Story job validator and produced a 12-second review bundle. The storyboard follows Social Studio's photo-sequence input format.

@@ -4,6 +4,7 @@ import 'package:event_motion/event_motion.dart';
 import 'package:flutter/widgets.dart';
 import 'package:fluvie/fluvie.dart' as video;
 
+import 'src/card_document.dart';
 import 'src/motion_clock.dart';
 
 const _ink = Color(0xFF202C2F);
@@ -11,80 +12,70 @@ const _paper = Color(0xFFF4EFE6);
 const _accent = Color(0xFFA73524);
 const _mosaic = 'mosaic';
 
-const _cards = [
-  _Card(
-    _Step.outline,
-    'Outline',
-    'Give the idea a clear sequence.',
-    _accent,
-    0,
-  ),
-  _Card(
-    _Step.layout,
-    'Layout',
-    'Make each point easy to scan.',
-    Color(0xFF306545),
-    1300,
-  ),
-  _Card(
-    _Step.motion,
-    'Motion',
-    'Show what changes over time.',
-    Color(0xFF54418D),
-    2600,
-  ),
-  _Card(
-    _Step.export,
-    'Export',
-    'Pick a frame and export the clip.',
-    Color(0xFF2D5874),
-    3900,
-  ),
-];
-
-final _timeline = MotionTimeline([
-  for (final card in _cards)
-    MotionEvent(
-      at: Duration(milliseconds: card.startMs),
-      node: card.id,
-      status: MotionStatus.active,
-    ),
-  const MotionEvent(
-    at: Duration(milliseconds: 5350),
-    node: _mosaic,
-    status: MotionStatus.complete,
-  ),
-]);
-
 /// A 4:5 composition with a focused card, a row of previous steps and a mosaic.
-video.Video build() => video.Video(
-  width: 480,
-  height: 600,
-  fps: 24,
-  poster: const video.Time.seconds(6.5),
-  scenes: [
-    video.Scene(
-      duration: const video.Time.seconds(7),
-      background: video.Background.color(_paper),
-      children: [
-        Positioned.fill(
-          child: atMotionTime(_timeline, (frame) => _Sequence(frame: frame)),
-        ),
-      ],
+video.Video build(CardDocument document) {
+  final cards = [
+    for (final entry in document.cards)
+      _Card(
+        _Step.values.byName(entry.id),
+        entry.title,
+        entry.caption,
+        Color(0xff000000 | int.parse(entry.color.substring(1), radix: 16)),
+        entry.atMs,
+      ),
+  ];
+  final timeline = MotionTimeline([
+    for (final card in cards)
+      MotionEvent(
+        at: Duration(milliseconds: card.startMs),
+        node: card.id,
+        status: MotionStatus.active,
+      ),
+    MotionEvent(
+      at: Duration(milliseconds: document.mosaicMs),
+      node: _mosaic,
+      status: MotionStatus.complete,
     ),
-  ],
-);
+  ]);
+  return video.Video(
+    width: 480,
+    height: 600,
+    fps: 24,
+    poster: video.Time.frames((document.coverMs / 1000 * 24).round()),
+    scenes: [
+      video.Scene(
+        duration: video.Time.frames((document.durationMs / 1000 * 24).round()),
+        background: video.Background.color(_paper),
+        children: [
+          Positioned.fill(
+            child: atMotionTime(
+              timeline,
+              (frame) =>
+                  _Sequence(document: document, cards: cards, frame: frame),
+            ),
+          ),
+        ],
+      ),
+    ],
+  );
+}
 
 class _Sequence extends StatelessWidget {
-  const _Sequence({required this.frame});
+  const _Sequence({
+    required this.document,
+    required this.cards,
+    required this.frame,
+  });
 
+  final CardDocument document;
+  final List<_Card> cards;
   final MotionFrame frame;
 
   @override
   Widget build(BuildContext context) {
-    final next = _cards.indexWhere((card) => frame.latestFor(card.id) == null);
+    final next = cards.indexWhere((card) => frame.latestFor(card.id) == null);
     final status = switch (next) {
-      >= 0 => 'Up next  ${_cards[next].title}',
+      >= 0 => 'Up next  ${cards[next].title}',
       _ when frame.latestFor(_mosaic) != null => 'Draft ready for review',
       _ => 'Preparing the final draft',
     };
@@ -93,18 +84,18 @@ class _Sequence extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'From idea to post',
-            style: TextStyle(
+          Text(
+            document.title,
+            style: const TextStyle(
               color: _ink,
               fontSize: 35,
               fontWeight: FontWeight.w700,
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
-            'Four steps to a visual draft',
-            style: TextStyle(color: _ink, fontSize: 16),
+          Text(
+            document.subtitle,
+            style: const TextStyle(color: _ink, fontSize: 16),
           ),
           const SizedBox(height: 25),
           Expanded(
@@ -114,7 +105,7 @@ class _Sequence extends StatelessWidget {
                 final mosaic = _progress(_mosaic, 620);
                 return Stack(
                   children: [
-                    for (final (index, card) in _cards.indexed)
+                    for (final (index, card) in cards.indexed)
                       if (frame.statusOf(card.id) == MotionStatus.active)
                         _place(card, index, size, mosaic),
                   ],
@@ -137,8 +128,8 @@ class _Sequence extends StatelessWidget {
 
   Widget _place(_Card card, int index, Size stage, double mosaic) {
     final entered = _progress(card.id, 420);
-    final dock = index + 1 < _cards.length
-        ? _progress(_cards[index + 1].id, 480)
+    final dock = index + 1 < cards.length
+        ? _progress(cards[index + 1].id, 480)
         : 0.0;
     final focused = Rect.fromLTWH(
       8,

@@ -105,6 +105,35 @@ void main() {
       throwsArgumentError,
     );
   });
+
+  testWidgets(
+    'the default card uses its requested size and localized caption',
+    (tester) async {
+      await tester.pumpWidget(
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: Center(
+            child: SizedBox(
+              width: 350,
+              height: 150,
+              child: MotionGraph(
+                diagram: MotionDiagram(nodes: [diagram.nodes.first]),
+                frame: MotionTimeline(const []).at(Duration.zero),
+                cardSize: const Size(180, 46),
+                statusLabel: (_) => 'Aguardando',
+              ),
+            ),
+          ),
+        ),
+      );
+
+      expect(
+        tester.getSize(find.byKey(const ValueKey('draft'))),
+        const Size(180, 46),
+      );
+      expect(find.text('Aguardando'), findsOneWidget);
+    },
+  );
 }
 
 class _TapCard extends StatefulWidget {

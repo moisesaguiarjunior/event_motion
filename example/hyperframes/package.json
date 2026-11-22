@@ -1,0 +1,6 @@
+{
+  "name": "event-motion-hyperframes-example",
+  "private": true,
+  "engines": {"node": ">=22"},
+  "devDependencies": {"hyperframes": "0.9.79"}
+}

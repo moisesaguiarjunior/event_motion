@@ -2,6 +2,8 @@ import 'package:event_motion/event_motion.dart';
 import 'package:flutter/widgets.dart';
 import 'package:fluvie/fluvie.dart' as video;
 
+import 'workflow_document.dart';
+
 Widget atMotionTime(
   MotionTimeline timeline,
   Widget Function(MotionFrame) build,
@@ -13,7 +15,3 @@ Widget atMotionTime(
     return build(timeline.at(motionTimeAtFrame(localFrame, clock.fps)));
   });
 }
-
-Duration motionTimeAtFrame(int frame, int fps) => Duration(
-  microseconds: (frame * Duration.microsecondsPerSecond / fps).round(),
-);

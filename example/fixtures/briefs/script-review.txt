@@ -1,0 +1,1 @@
+Crie um painel em português do Brasil que mostra uma simulação de revisão de roteiro. Coloque quatro etapas em diamante: pauta, fontes, escrita e revisão. Use mensagens concretas e curtas.
