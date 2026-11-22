@@ -36,22 +36,26 @@ TEXT = {"type": "string"}
 SOURCE = obj(id=TEXT, url=TEXT, label=TEXT, date=TEXT,
              state=choice("verified", "provided_only", "not_accessible"), note=TEXT)
 CLAIM = obj(id=TEXT, text=TEXT, source_ids=array(TEXT))
+GENERATOR_REQUEST = obj(
+    capability=TEXT, medium=choice("image", "video", "both"), reason=TEXT, acceptance=TEXT,
+)
 PLAN = obj(
     status=choice("ready", "needs_sources"), reason=TEXT, thesis=TEXT, hook=TEXT,
     voice=array(TEXT), counterpoint=TEXT, visual_direction=TEXT,
     template=choice("data_story", "editorial_catalog", "none"),
     media=choice("image", "video", "both", "none"),
-    sources=array(SOURCE), claims=array(CLAIM),
+    sources=array(SOURCE), claims=array(CLAIM), generator_requests=array(GENERATOR_REQUEST),
 )
 FINDING = obj(kind=choice("fact", "voice", "visual"),
               severity=choice("blocking", "suggestion"), problem=TEXT, evidence=TEXT)
 REVIEW = obj(verdict=choice("ready", "revise", "needs_sources"), argument=TEXT,
-             preserve=array(TEXT), findings=array(FINDING))
+             preserve=array(TEXT), findings=array(FINDING),
+             generator_requests=array(GENERATOR_REQUEST))
 DRAFT = obj(
     status=choice("ready", "needs_sources"), reason=TEXT, post=TEXT, alt_text=TEXT,
     decisions=array(TEXT), claim_ids=array(TEXT), visual_json=TEXT,
     template=PLAN["properties"]["template"], media=PLAN["properties"]["media"],
-    new_sources=array(SOURCE), new_claims=array(CLAIM),
+    new_sources=array(SOURCE), new_claims=array(CLAIM), generator_requests=array(GENERATOR_REQUEST),
 )
 
 EDITORIAL = """Write for Moisés Aguiar Júnior and readers on X. Follow the briefing language.
@@ -65,6 +69,10 @@ Use the reference for depth: a main chart, annotations, evidence, and chronology
 when those help the reader. Use independent art and facts for this story.
 A wrong fact must change. If a correction leaves a hole, find an equally vivid
 accurate detail. A dispute about taste belongs in the editorial decisions.
+If the brief or review reveals a genuinely missing renderer capability, add it
+to generator_requests with the medium, the use case, and a concrete acceptance
+check. Use an empty array otherwise. These are proposals. Don't add unsupported
+features to the render specification.
 """
 
 RESEARCH = """Research the brief using live web search. Open primary sources and check dates,
@@ -75,11 +83,11 @@ unverified material and keep it outside the verified claims. If the thesis
 cannot be supported, return needs_sources with the missing evidence.
 Propose one sharp hook, a thesis, a fair counterpoint, and specific voice beats
 to defend. Choose the visual story and what its chart or diagrams explain.
-Pay attention to requested_outputs. data_story is an annotated line chart with
-up to four evidence cards and four chronological entries. editorial_catalog is
-an explanatory 8–12 cell grid with illustrative marks. Media is none if no visual
-was requested. An infographic requires the image. A requested video requires
-video or both; choose both when both were requested.
+Use delivery_outputs for the package requirements. Each ready post includes a
+still image; video is extra when requested. data_story is an annotated line chart
+with up to four evidence cards and four chronological entries. editorial_catalog
+is an explanatory 8–12 cell grid with illustrative marks. Choose image or both
+when ready, and both when video was requested.
 """
 
 CRITIC = """Act as Opus, a peer editor with an independent point of view.
@@ -98,11 +106,11 @@ Address the other editor's concrete factual or visual challenges. State what
 you kept, changed, or declined in decisions. Keep the authorial point of view.
 Use claim_ids for the evidence used in the post and visual. If an evidence gap
 is unresolved, use needs_sources. Choose the final template and media in light
-of the two proposals and requested outputs. Explain any change from the plan.
+of the two proposals and delivery_outputs. Explain any change from the plan.
 If a claim needs changing, use live search and add checked evidence to
 new_sources and new_claims with new IDs. Cite the new claim and drop the wrong
 one from claim_ids. Use empty arrays when the existing evidence is sufficient.
-Return visual_json as a JSON string, or an empty string for template none.
+Return visual_json as a JSON string. A ready post must include its visual.
 For data_story, use the exact keys and component shapes of the supplied example.
 Use 2–7 short equally spaced categories, 1–3 comparable series, finite numeric values,
 one real annotated point, up to four evidence cards, and up to four dated entries.
@@ -203,7 +211,7 @@ def check_brief(brief):
             or not isinstance(outputs, list) or not outputs
             or not all(isinstance(output, str) and output in OUTPUTS for output in outputs)):
         raise EditorialError("unsupported Dot briefing")
-    return set(outputs)
+    return set(outputs) | {"post", "infographic"}
 
 
 def check_plan(plan, outputs):
@@ -234,12 +242,9 @@ def check_plan(plan, outputs):
 
 
 def check_visual_choice(proposal, outputs):
-    visual = outputs & {"infographic", "video"}
-    if bool(visual) != (proposal["template"] != "none") or bool(visual) != (proposal["media"] != "none"):
-        raise EditorialError("plan does not match requested visual outputs")
-    if "infographic" in visual and proposal["media"] not in {"image", "both"}:
-        raise EditorialError("plan must include the requested infographic")
-    if "video" in visual and proposal["media"] not in {"video", "both"}:
+    if proposal["template"] == "none" or proposal["media"] not in {"image", "both"}:
+        raise EditorialError("ready packages require an image")
+    if "video" in outputs and proposal["media"] != "both":
         raise EditorialError("plan must include the requested video")
 
 
@@ -307,10 +312,6 @@ def checked_draft(draft, plan):
             or not set(draft["claim_ids"]) <= {c["id"] for c in plan["claims"]}
             or not any(item.strip() for item in draft["decisions"])):
         raise EditorialError("draft requires copy, sourced claims, and editorial decisions")
-    if draft["template"] == "none":
-        if draft["visual_json"].strip():
-            raise EditorialError("copy-only plan returned an unsupported visual")
-        return None
     if not draft["alt_text"].strip():
         raise EditorialError("visual posts require alt text")
     visual = json.loads(draft["visual_json"])
@@ -341,12 +342,47 @@ def render(visual, draft, logs, artifacts):
         subprocess.run(["bash", str(ROOT / "tool/render_example.sh"), template,
                         str(specification), str(output)], cwd=ROOT,
                        stdout=log, stderr=subprocess.STDOUT, check=True, timeout=420)
-    shutil.copyfile(output / f"{template}.png", artifacts / "post.png")
+    shutil.copyfile(output / f"{template}.png", artifacts / "imagem.png")
     if draft["media"] in {"video", "both"}:
-        shutil.copyfile(output / f"{template}.mp4", artifacts / "post.mp4")
+        shutil.copyfile(output / f"{template}.mp4", artifacts / "video.mp4")
 
 
-def finish(workspace, plan, reviews, draft=None, visual=None, reason=""):
+def pauta_markdown(brief, plan):
+    lines = ["# Pauta", "", brief.get("topic", "Pauta editorial"), ""]
+    for field, label in (("id", "ID"), ("language", "Idioma"), ("created_at", "Enviada")):
+        if brief.get(field):
+            lines.append(f"- {label} · {brief[field]}")
+    lines.extend(["", "## Briefing recebido", "", brief["briefing_markdown"]])
+    if brief.get("sources"):
+        lines.extend(["", "## Fontes do briefing", ""])
+        lines.extend(f"- {url}" for url in brief["sources"])
+    lines.extend(["", "## Direção editorial", "", plan["thesis"], "", plan["visual_direction"],
+                  "", "[Pesquisa e fontes verificadas](research-notes.md)"])
+    return "\n".join(lines)
+
+
+def generator_requests_markdown(requests):
+    entries = {}
+    for author, stage, request in requests:
+        capability = request["capability"].strip()
+        reason = request["reason"].strip()
+        acceptance = request["acceptance"].strip()
+        if capability or reason or acceptance:
+            key = (capability, request["medium"], reason, acceptance)
+            entries.setdefault(key, {})[f"{author} · {stage}"] = None
+    if not entries:
+        return ""
+    mediums = {"image": "Imagem", "video": "Vídeo", "both": "Imagem e vídeo"}
+    lines = ["# Demandas para o gerador", "", "Propostas levantadas durante a pauta e a revisão."]
+    for (capability, medium, reason, acceptance), provenance in entries.items():
+        lines.extend(["", f"## {capability or 'Capacidade a detalhar'}", "", f"Formato · {mediums[medium]}  ",
+                      f"Origem · {', '.join(provenance)}", "",
+                      f"**Por que faz falta** · {reason or 'A detalhar.'}", "",
+                      f"**Critério de aceite** · {acceptance or 'A detalhar.'}"])
+    return "\n".join(lines)
+
+
+def finish(workspace, brief, plan, reviews, requests, draft=None, visual=None, reason=""):
     artifacts = workspace / "artifacts"
     logs = workspace / ".editorial"
     report = {
@@ -360,6 +396,18 @@ def finish(workspace, plan, reviews, draft=None, visual=None, reason=""):
     def write(name, content):
         (artifacts / name).write_text(content.rstrip() + "\n", encoding="utf-8")
         report["artifacts"].append(f"artifacts/{name}")
+
+    write("pauta.md", pauta_markdown(brief, plan))
+    if not reason:
+        if draft is None or visual is None:
+            raise EditorialError("ready packages require a post and an image")
+        write("post.md", draft["post"])
+        render(visual, draft, logs, artifacts)
+        report["artifacts"].append("artifacts/imagem.png")
+        if draft["media"] in {"video", "both"}:
+            report["artifacts"].append("artifacts/video.mp4")
+        report["artifacts"].append("artifacts/visual.json")
+        write("alt-text.txt", draft["alt_text"])
 
     notes = ["# Research notes", "", plan["thesis"], "", plan["counterpoint"], "",
              *[f"- [{s['id']}] {s['label']} ({s['date'] or 'ND'}) · {s['state']} · {s['url']}\n  {s['note']}"
@@ -381,14 +429,10 @@ def finish(workspace, plan, reviews, draft=None, visual=None, reason=""):
     if reason:
         discussion.extend(["", "## Pending", "", reason])
     write("editorial-review.md", "\n".join(discussion))
+    backlog = generator_requests_markdown(requests)
+    if backlog:
+        write("demandas-gerador.md", backlog)
     if not reason:
-        write("post.md", draft["post"])
-        if visual is not None:
-            render(visual, draft, logs, artifacts)
-            write("alt-text.txt", draft["alt_text"])
-            report["artifacts"].extend(["artifacts/visual.json", "artifacts/post.png"])
-            if draft["media"] in {"video", "both"}:
-                report["artifacts"].append("artifacts/post.mp4")
         identity = {name: hashlib.sha256((workspace / name).read_bytes()).hexdigest()
                     for name in report["artifacts"]}
         save(logs / "approved-artifacts.json", identity)
@@ -399,27 +443,38 @@ def finish(workspace, plan, reviews, draft=None, visual=None, reason=""):
 def process(brief, workspace, models):
     outputs = check_brief(brief)
     (workspace / "artifacts").mkdir(exist_ok=True)
-    context = {"brief": brief}
-    plan = models.call("sol", "research", PLAN, RESEARCH, context)
+    context = {"brief": brief, "delivery_outputs": sorted(outputs)}
+    requests = []
+
+    def ask(role, stage, schema, instructions, data):
+        answer = models.call(role, stage, schema, instructions, data)
+        author = {"sol": "Sol", "opus": "Opus"}[role]
+        requests.extend((author, stage, request) for request in answer["generator_requests"])
+        return answer
+
+    def deliver(ledger, reviews, **kwargs):
+        return finish(workspace, brief, ledger, reviews, requests, **kwargs)
+
+    plan = ask("sol", "research", PLAN, RESEARCH, context)
     check_plan(plan, outputs)
     if plan["status"] == "needs_sources":
-        return finish(workspace, plan, [], reason=plan["reason"] or "Research needs sources.")
+        return deliver(plan, [], reason=plan["reason"] or "Research needs sources.")
     context["plan"] = plan
-    plan_review = models.call("opus", "plan", REVIEW,
-                             CRITIC + "\nReview the research, hook, and proposed visual.", context)
+    plan_review = ask("opus", "plan", REVIEW,
+                      CRITIC + "\nReview the research, hook, and proposed visual.", context)
     reviews = [("plan", plan_review)]
     if plan_review["verdict"] == "needs_sources":
-        return finish(workspace, plan, reviews, reason=plan_review["argument"] or "Plan needs sources.")
+        return deliver(plan, reviews, reason=plan_review["argument"] or "Plan needs sources.")
     context["plan_review"] = plan_review
     if plan["template"] != "none":
         context["visual_examples"] = {
             template: json.loads((ROOT / "example/fixtures" / f"{template}.json").read_text(encoding="utf-8"))
             for template in ("data_story", "editorial_catalog")
         }
-    draft = models.call("sol", "draft", DRAFT, WRITE, context)
+    draft = ask("sol", "draft", DRAFT, WRITE, context)
     for stage in ("draft-review", "revision-review"):
         if draft["status"] == "needs_sources":
-            return finish(workspace, plan, reviews, draft=draft, reason=draft["reason"] or "Draft needs sources.")
+            return deliver(plan, reviews, draft=draft, reason=draft["reason"] or "Draft needs sources.")
         def validate(proposal):
             check_visual_choice(proposal, outputs)
             ledger = draft_evidence(proposal, plan, outputs)
@@ -429,22 +484,22 @@ def process(brief, workspace, models):
             evidence, visual = validate(draft)
         except (KeyError, TypeError, ValueError) as error:
             repair = dict(context, previous_draft=draft, validation_error=str(error))
-            draft = models.call("sol", f"{stage}-format", DRAFT,
-                                WRITE + "\nFix the failed contract only. Keep the same copy and factual values.", repair)
+            draft = ask("sol", f"{stage}-format", DRAFT,
+                        WRITE + "\nFix the failed contract only. Keep the same copy and factual values.", repair)
             if draft["status"] == "needs_sources":
-                return finish(workspace, plan, reviews, draft=draft, reason=draft["reason"] or "Draft needs sources.")
+                return deliver(plan, reviews, draft=draft, reason=draft["reason"] or "Draft needs sources.")
             evidence, visual = validate(draft)
         context["draft"] = draft
-        review = models.call("opus", stage, REVIEW,
-                             CRITIC + "\nReview the exact post and visual JSON before rendering.", context)
+        review = ask("opus", stage, REVIEW,
+                     CRITIC + "\nReview the exact post and visual JSON before rendering.", context)
         reviews.append((stage, review))
         if review["verdict"] == "ready":
-            return finish(workspace, evidence, reviews, draft=draft, visual=visual)
+            return deliver(evidence, reviews, draft=draft, visual=visual)
         if review["verdict"] == "needs_sources" or stage == "revision-review":
-            return finish(workspace, evidence, reviews, draft=draft,
-                          reason=review["argument"] or "Editorial concerns remain open.")
+            return deliver(evidence, reviews, draft=draft,
+                           reason=review["argument"] or "Editorial concerns remain open.")
         context["draft_review"] = review
-        draft = models.call("sol", "revision", DRAFT, WRITE, context)
+        draft = ask("sol", "revision", DRAFT, WRITE, context)
     raise AssertionError("unreachable editorial stage")
 
 
