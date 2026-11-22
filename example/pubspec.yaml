@@ -1,0 +1,27 @@
+name: event_motion_example
+description: A Fluvie composition using Event Motion.
+publish_to: none
+
+environment:
+  sdk: ^3.12.0
+  flutter: '>=3.44.0'
+
+dependencies:
+  event_motion:
+    path: ..
+  flutter:
+    sdk: flutter
+  fluvie:
+    git:
+      url: https://github.com/moisesaguiarjunior/fluvie.git
+      ref: b2f578a343d8f019cab577bdcef10740545e0fad
+      path: packages/fluvie
+
+dev_dependencies:
+  alchemist: ^0.14.0
+  flutter_lints: ^6.0.0
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true
