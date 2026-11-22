@@ -1,0 +1,28 @@
+{
+  "title": "O mesmo vídeo. 288 quadros a mais.",
+  "subtitle": "Escolher 60 fps muda a quantidade de imagens a renderizar. O vídeo ainda dura os mesmos oito segundos.",
+  "chart_title": "Quadros acumulados por duração",
+  "unit": "quadros",
+  "chart_source": "[1]",
+  "labels": ["0 s", "2 s", "4 s", "6 s", "8 s"],
+  "series": [
+    {"name": "24 fps", "values": [0, 48, 96, 144, 192]},
+    {"name": "60 fps", "values": [0, 120, 240, 360, 480]}
+  ],
+  "annotation": {"series_index": 1, "label_index": 4, "note": "Mesmo clipe de 8 s, 480 quadros a 60 fps."},
+  "evidence_title": "Onde a conta muda",
+  "evidence": [
+    {"label": "2,5×", "title": "Quadros por segundo", "note": "60 dividido por 24.", "source": "[1]"},
+    {"label": "+288", "title": "Quadros no clipe", "note": "480 menos 192 em 8 s.", "source": "[1]"},
+    {"label": "8 s", "title": "Duração igual", "note": "O clipe não fica mais longo.", "source": "[1]"},
+    {"label": "ND", "title": "Tempo de render", "note": "Ainda depende da cena e do encoder.", "source": "[1]"}
+  ],
+  "timeline_title": "A mesma duração em marcos",
+  "timeline": [
+    {"label": "2 s", "title": "Primeiro recorte", "note": "48 contra 120 quadros.", "source": "[1]"},
+    {"label": "4 s", "title": "Meio do clipe", "note": "96 contra 240 quadros.", "source": "[1]"},
+    {"label": "6 s", "title": "Três quartos", "note": "144 contra 360 quadros.", "source": "[1]"},
+    {"label": "8 s", "title": "Fim do clipe", "note": "192 contra 480 quadros.", "source": "[1]"}
+  ],
+  "sources": ["[1] Fluvie · Exportação e FPS · cálculo: segundos × fps"]
+}

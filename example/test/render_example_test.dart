@@ -4,6 +4,7 @@ import 'package:alchemist/alchemist.dart' show loadFonts;
 import 'package:event_motion_example/agent_pipeline.dart' as pipeline;
 import 'package:event_motion_example/card_sequence.dart' as sequence;
 import 'package:event_motion_example/comparison.dart' as comparison;
+import 'package:event_motion_example/data_story.dart' as data_story;
 import 'package:event_motion_example/editorial_catalog.dart' as editorial;
 import 'package:event_motion_example/hybrid.dart' as hybrid;
 import 'package:event_motion_example/src/card_document.dart';
@@ -66,6 +67,14 @@ void main() {
       () => editorial.build(CatalogDocument.parse(input('editorial_catalog'))),
     ),
     (
+      'data_story',
+      () => data_story.build(input('data_story'), animated: false),
+    ),
+    (
+      'data_story_video',
+      () => data_story.build(input('data_story'), animated: true),
+    ),
+    (
       'character_poster',
       () => workshop.buildPoster(TeamDocument.parse(input('workshop_team'))),
     ),
@@ -84,7 +93,11 @@ void main() {
         ),
       ),
   ]) {
-    final imageOnly = name == 'comparison' || name == 'character_poster';
+    final imageOnly = const {
+      'comparison',
+      'character_poster',
+      'data_story',
+    }.contains(name);
     final formats = imageOnly ? 'PNG' : 'MP4 and PNG';
     testWidgets('exports $name as $formats', skip: !_render, (tester) async {
       final outputName = name == 'agent_pipeline' && workflow != null
@@ -127,8 +140,11 @@ Future<void> _export(
     final customOutput = switch (name) {
       'workflow' => Platform.environment['EVENT_MOTION_WORKFLOW_OUT'],
       'hybrid' => Platform.environment['EVENT_MOTION_HYBRID_OUT'],
-      'editorial_catalog' || 'character_poster' || 'character_dashboard' =>
-        Platform.environment['EVENT_MOTION_EDITORIAL_OUT'],
+      'editorial_catalog' ||
+      'character_poster' ||
+      'character_dashboard' ||
+      'data_story' ||
+      'data_story_video' => Platform.environment['EVENT_MOTION_EDITORIAL_OUT'],
       _ => null,
     };
     final destination = Directory(customOutput ?? 'build/$name')
