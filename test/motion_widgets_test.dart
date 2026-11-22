@@ -12,7 +12,7 @@ void main() {
   );
 
   testWidgets(
-    'the graph and feed follow the same frame when the caller seeks',
+    'status, pulse and feed follow the same frame when the caller seeks',
     (tester) async {
       final timeline = MotionTimeline(const [
         MotionEvent(
@@ -43,16 +43,58 @@ void main() {
         );
       }
 
-      await showAt(const Duration(seconds: 1));
+      final links = find.descendant(
+        of: find.byType(MotionGraph),
+        matching: find.byType(CustomPaint),
+      );
+
+      await showAt(const Duration(milliseconds: 1325));
       expect(find.text('Running'), findsOneWidget);
       expect(find.text('Review started'), findsOneWidget);
+      expect(links, paints..circle(x: 175, y: 75, radius: 4));
+
+      await showAt(const Duration(milliseconds: 1650));
+      expect(links, paintsExactlyCountTimes(#drawCircle, 0));
 
       await showAt(Duration.zero);
       expect(find.text('Ready'), findsNWidgets(2));
       expect(find.text('Review started'), findsNothing);
+      expect(links, paintsExactlyCountTimes(#drawCircle, 0));
       expect(tester.takeException(), isNull);
     },
   );
+
+  testWidgets('reordering a diagram keeps custom card state with its node', (
+    tester,
+  ) async {
+    final frame = MotionTimeline(const []).at(Duration.zero);
+
+    Future<void> show(Iterable<MotionNode> nodes) => tester.pumpWidget(
+      Directionality(
+        textDirection: TextDirection.ltr,
+        child: Center(
+          child: SizedBox(
+            width: 350,
+            height: 150,
+            child: MotionGraph(
+              diagram: MotionDiagram(nodes: nodes),
+              frame: frame,
+              nodeBuilder: (_, node, _) => _TapCard(node.label),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await show(diagram.nodes);
+    await tester.tap(find.text('Draft: 0'));
+    await tester.pump();
+    expect(find.text('Draft: 1'), findsOneWidget);
+
+    await show(diagram.nodes.reversed);
+    expect(find.text('Draft: 1'), findsOneWidget);
+    expect(find.text('Review: 0'), findsOneWidget);
+  });
 
   test('rejects an edge whose target does not exist', () {
     expect(
@@ -63,4 +105,23 @@ void main() {
       throwsArgumentError,
     );
   });
+}
+
+class _TapCard extends StatefulWidget {
+  const _TapCard(this.label);
+
+  final String label;
+
+  @override
+  State<_TapCard> createState() => _TapCardState();
+}
+
+class _TapCardState extends State<_TapCard> {
+  int _taps = 0;
+
+  @override
+  Widget build(BuildContext context) => GestureDetector(
+    onTap: () => setState(() => _taps++),
+    child: Center(child: Text('${widget.label}: $_taps')),
+  );
 }

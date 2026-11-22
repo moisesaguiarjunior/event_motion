@@ -129,6 +129,7 @@ class MotionGraph extends StatelessWidget {
           ),
           for (final node in diagram.nodes)
             Positioned.fromRect(
+              key: ValueKey(node.id),
               rect: Rect.fromCenter(
                 center: centers[node.id]!,
                 width: card.width,
