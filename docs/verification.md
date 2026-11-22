@@ -35,3 +35,9 @@ The transparent and opaque imports were tested at 1080 × 1350. Each source had 
 An export from a clean source archive installed the pinned dependencies and rebuilt the hybrid. Its final PNG and MP4 matched the originals byte for byte. The raw Flutter capture was 1,084,752,000 bytes as measured before teardown.
 
 Eight samples from the agent panel passed Social Studio's Story job validator and produced a 12-second review bundle. The storyboard follows Social Studio's photo-sequence input format. In Chrome, scene selection sought to 7.5 seconds and caption selection sought to 9 seconds. Both paused playback at the selected moment.
+
+## Quality and package candidate
+
+The automated checks cover formatting, analysis, six library tests, thirteen example tests, and a headless export of the 96-frame agent workflow. The GitHub workflow ran on Ubuntu 24.04 with Flutter 3.47.9. [Passing Quality run](https://github.com/moisesaguiarjunior/event_motion/actions/runs/44973728685)
+
+The Flutter package candidate is `0.1.0` under MIT. `flutter pub publish --dry-run` validated the 47 KB archive with zero warnings. The archive contains the Flutter source, synthetic fixtures and tools. Generated media, fonts and installed dependencies stayed outside the package. `npm audit` reported zero known advisories for the pinned HyperFrames dependency tree during verification. See the [dependency and asset provenance](compatibility.md).

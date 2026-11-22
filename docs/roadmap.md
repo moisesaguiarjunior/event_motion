@@ -40,6 +40,8 @@ The deliverable is a local workflow that turns a brief and optional data into a 
 ## 5. Adoption and release
 
 - [x] Try the first composition through the Social Studio job and review flow.
-- [ ] Add CI for analysis, tests and one representative headless render.
+- [x] Add CI for analysis, tests and one representative headless render.
 - [x] Document supported Flutter and Fluvie revisions and the scope of the public API.
-- [ ] Choose the release license, check bundled assets and dependencies, and review the release candidate before publishing the package.
+- [x] Choose the release license, check bundled assets and dependencies, and review the release candidate before publishing the package.
+
+See the [verification record](verification.md) for the clean-checkout render, model evaluation, adoption test, and package dry run.
