@@ -21,7 +21,7 @@ ILLUSTRATION_ASSET_LIBRARY = ROOT / "example/assets/editorial_local"
 CODEX_MODEL = "gpt-6.2-sol"
 OPUS_MODEL = "claude-opus-5-5"
 OUTPUTS = {"post", "research_notes", "infographic", "video"}
-VISUAL_TEMPLATES = ("data_story", "editorial_catalog", "editorial_matrix", "editorial_illustration")
+VISUAL_TEMPLATES = ("quantitative_chart", "data_story", "editorial_catalog", "editorial_matrix", "editorial_illustration")
 ANIMATED_VARIANTS = {
     "data_story": "data_story_video",
     "editorial_illustration": "editorial_illustration_video",
@@ -129,7 +129,23 @@ an API gateway or a processing path. An optional silent video reveals the route.
 For parts of a whole, data_story supports a donut and a 100% stacked bar
 with a subtotal bracket. It also supports horizontal paired dots and fixed
 value axes with labeled reference lines. editorial_matrix can show a large
-statistic with its source and scope directly underneath.
+statistic with its source and scope directly underneath. It also accepts a
+rows_note (up to 60 characters) directly above the historical rows.
+
+quantitative_chart is a still 1080x1350 quantitative composition. Use kind
+intervals for 2–4 unconnected estimates on one signed axis with min, max,
+suffix, and rows {label, estimate, lower, upper, note, source_ids}. Numeric
+bounds must contain each interval and lower <= estimate <= upper. Zero is
+labeled. Use kind bar_panels for exactly two independent zero-baseline bar
+panels {title, unit, maximum, note, source_ids, bars: [{label, value,
+annotation?}]}. Each panel has 2–4 categorical bars; unequal dates are not
+connected. Each maximum is positive and covers all its values. annotation
+belongs only to that bar. Both kinds require title, subtitle, hero {value,
+caption, source_ids}, context, footnote, and sources [{id, label}]. Keep every
+qualifier near its measure and source_ids in the verified source key. Respect
+the compact example copy lengths; do not move unrelated units onto one axis.
+Choose media image only. See both quantitative_chart examples.
+
 Describe the ideal visual first. If the exact format is unavailable, request it
 in generator_requests and choose the closest honest installed composition. An
 unsupported format alone is never needs_sources. Use template and media none
@@ -196,6 +212,21 @@ If a claim needs changing, use live search and add checked evidence to
 new_sources and new_claims with new IDs. Cite the new claim and drop the wrong
 one from claim_ids. Use empty arrays when the existing evidence is sufficient.
 Return visual_json as a JSON string when a faithful installed visual exists.
+
+quantitative_chart is a still 1080x1350 quantitative composition. Use kind
+intervals for 2–4 unconnected estimates on one signed axis with min, max,
+suffix, and rows {label, estimate, lower, upper, note, source_ids}. Numeric
+bounds must contain each interval and lower <= estimate <= upper. Zero is
+labeled. Use kind bar_panels for exactly two independent zero-baseline bar
+panels {title, unit, maximum, note, source_ids, bars: [{label, value,
+annotation?}]}. Each panel has 2–4 categorical bars; unequal dates are not
+connected. Each maximum is positive and covers all its values. annotation
+belongs only to that bar. Both kinds require title, subtitle, hero {value,
+caption, source_ids}, context, footnote, and sources [{id, label}]. Keep every
+qualifier near its measure and source_ids in the verified source key. Respect
+the compact example copy lengths; do not move unrelated units onto one axis.
+Choose media image only. See both quantitative_chart examples.
+
 For data_story use an example matching the chart kind. Choose line for
 equally spaced categories with up to three series or paired_dot for two
 comparable series on a shared horizontal scale. The first paired series
@@ -225,6 +256,8 @@ verified ID). Match the IDs in the source key to the citations in the tiles.
 Use editorial_matrix for a qualitative comparison with 2–4 dated rows unless
 video is required. Preserve the number of dated events and their qualifications;
 do not pad a chronology or invent chart values.
+For editorial_matrix, use optional rows_note (up to 60 characters) for a
+period or column-group scope directly above the first row.
 For editorial_matrix, use the supplied example shape. Keep dates in ascending
 YYYY-MM-DD order, use 2–4 rows, and match each row's source_ids to the verified
 IDs in sources. Use 1–3 IDs per row and 1–7 source labels of up to 30 characters
@@ -385,8 +418,8 @@ def check_visual_choice(proposal, outputs):
         raise EditorialError("ready packages require an image")
     if "video" in outputs and proposal["media"] != "both":
         raise EditorialError("plan must include the requested video")
-    if proposal["template"] == "editorial_matrix" and proposal["media"] != "image":
-        raise EditorialError("editorial_matrix supports image delivery only")
+    if proposal["template"] in {"editorial_matrix", "quantitative_chart"} and proposal["media"] != "image":
+        raise EditorialError(f"{proposal['template']} supports image delivery only")
 
 
 def checked_graph(visual, plan):
@@ -468,7 +501,7 @@ def checked_draft(draft, plan, allowed_assets=()):
     template = draft["template"]
     if template == "data_story":
         checked_graph(visual, plan)
-    if template == "editorial_illustration":
+    if template in {"editorial_illustration", "quantitative_chart"}:
         visual["alt_text"] = draft["alt_text"].strip()
     result = subprocess.run(
         ["dart", str(ROOT / "example/bin/validate_editorial.dart"), template],
@@ -478,7 +511,7 @@ def checked_draft(draft, plan, allowed_assets=()):
     if result.returncode == 2:
         raise EditorialError(result.stderr.strip())
     result.check_returncode()
-    if template in {"editorial_matrix", "editorial_illustration"}:
+    if template in {"editorial_matrix", "editorial_illustration", "quantitative_chart"}:
         verified = {source["id"] for source in plan["sources"] if source["state"] == "verified"}
         if any(source["id"] not in verified for source in visual["sources"]):
             raise EditorialError(f"{template} requires verified source IDs in its footer")
@@ -766,7 +799,7 @@ def process(brief, workspace, models):
         template: json.loads((ROOT / "example/fixtures" / f"{template}.json").read_text(encoding="utf-8"))
         for template in (*VISUAL_TEMPLATES, "data_story_composition",
                          "data_story_paired_dot", "data_story_axis", "data_story_stacked_bar",
-                         "data_story_grouped_donut", "editorial_matrix_hero")
+                         "data_story_grouped_donut", "editorial_matrix_hero", "editorial_matrix_rows_note", "quantitative_chart_panels")
     }
     draft = ask("sol", "draft", DRAFT, WRITE, context)
     for stage in ("draft-review", "revision-review"):

@@ -20,7 +20,7 @@ case "$#:${1:-}" in
   0:) set -- --name 'exports (agent_pipeline|card_sequence) as MP4 and PNG' ;;
   1:agent_pipeline|1:card_sequence|1:activation|1:cha_de_estrelas|1:jardim_sonho) set -- --plain-name "exports $1 as MP4 and PNG" ;;
   1:comparison) set -- --plain-name 'exports comparison as PNG' ;;
-  [123]:editorial_catalog|[123]:editorial_matrix|[123]:editorial_illustration|[123]:editorial_illustration_video|[123]:character_poster|[123]:character_dashboard|[123]:data_story|[123]:data_story_video)
+  [123]:quantitative_chart|[123]:editorial_catalog|[123]:editorial_matrix|[123]:editorial_illustration|[123]:editorial_illustration_video|[123]:character_poster|[123]:character_dashboard|[123]:data_story|[123]:data_story_video)
     if [[ $# -ge 2 ]]; then
       if [[ ! -f "$2" ]]; then
         printf 'Editorial input not found: %s\n' "$2" >&2
@@ -36,7 +36,7 @@ case "$#:${1:-}" in
     editorial_name=$1
     formats='MP4 and PNG'
     case "$1" in
-      character_poster|data_story|editorial_matrix|editorial_illustration) formats='PNG' ;;
+      quantitative_chart|character_poster|data_story|editorial_matrix|editorial_illustration) formats='PNG' ;;
     esac
     set -- --plain-name "exports $1 as $formats"
     ;;
@@ -98,7 +98,7 @@ case "${editorial_name:-}" in
     python3 -B "$script_dir/png_alt_text.py" "$destination/$editorial_name.png" \
       "${EVENT_MOTION_EDITORIAL:-fixtures/editorial_illustration.json}"
     ;;
-  data_story|data_story_video)
+  quantitative_chart|data_story|data_story_video)
     destination="${EVENT_MOTION_EDITORIAL_OUT:-build/$editorial_name}"
     poster="$destination/$editorial_name.png"
     if [[ -n "${EVENT_MOTION_EDITORIAL:-}" ]]; then

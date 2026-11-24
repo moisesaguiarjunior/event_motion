@@ -20,6 +20,7 @@ final class MatrixDocument {
     this.footer,
     this.sources,
     this.heroStat,
+    this.rowsNote,
   );
 
   final String title;
@@ -28,6 +29,7 @@ final class MatrixDocument {
   final String footer;
   final Map<String, String> sources;
   final MatrixHeroStat? heroStat;
+  final String? rowsNote;
 
   factory MatrixDocument.parse(String source) {
     const root = r'$';
@@ -35,7 +37,7 @@ final class MatrixDocument {
       jsonDecode(source),
       root,
       const {'version', 'title', 'columns', 'rows', 'footer', 'sources'},
-      optional: const {'hero_stat'},
+      optional: const {'hero_stat', 'rows_note'},
     );
     if (document['version'] != 1) {
       throw FormatException('$root.version: expected 1');
@@ -146,6 +148,9 @@ final class MatrixDocument {
       editorialCopy(document['footer'], '$root.footer', 110),
       Map.unmodifiable(sources),
       heroStat,
+      document.containsKey('rows_note')
+          ? editorialCopy(document['rows_note'], r'$.rows_note', 60)
+          : null,
     );
   }
 }

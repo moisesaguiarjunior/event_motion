@@ -1,0 +1,58 @@
+{
+  "kind": "intervals",
+  "title": "More output, longer waits",
+  "subtitle": "Synthetic acceptance fixture \u00b7 12 months after adoption",
+  "hero": {
+    "value": "+1.8 days",
+    "caption": "Average elapsed time among completed changes. Baseline 3.5 days; approximate 95% interval +0.6 to +3.0 days.",
+    "source_ids": [
+      "S1"
+    ]
+  },
+  "context": "Elapsed time is not reviewer labor. Each outcome uses its own baseline.",
+  "footnote": "Counts per active engineer-month. Approximate 95% intervals reconstructed from rounded inputs; separate outcomes and samples.",
+  "sources": [
+    {
+      "id": "S1",
+      "label": "Synthetic study \u00b7 November 2026 \u00b7 example data"
+    }
+  ],
+  "axis": {
+    "min": -10,
+    "max": 65,
+    "suffix": "%"
+  },
+  "rows": [
+    {
+      "label": "Changes opened",
+      "estimate": 35.7,
+      "lower": 12.28,
+      "upper": 59.35,
+      "note": "Panel A",
+      "source_ids": [
+        "S1"
+      ]
+    },
+    {
+      "label": "Changes merged",
+      "estimate": 26,
+      "lower": 2.4,
+      "upper": 49.52,
+      "note": "Panel B",
+      "source_ids": [
+        "S1"
+      ]
+    },
+    {
+      "label": "Tasks resolved",
+      "estimate": 13.7,
+      "lower": -3.18,
+      "upper": 30.64,
+      "note": "Panel C \u00b7 includes zero",
+      "source_ids": [
+        "S1"
+      ]
+    }
+  ],
+  "alt_text": "Synthetic chart of three estimates and their uncertainty; only the task interval crosses zero."
+}
