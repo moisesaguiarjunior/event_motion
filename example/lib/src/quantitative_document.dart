@@ -14,6 +14,30 @@ final class QuantitativeDocument {
     return raw.toDouble();
   }
 
+  /// Prefer requested display precision, but never turn a nonzero value into zero.
+  static String label(num value, {int? decimals, bool signed = false}) {
+    final magnitude = value.abs();
+    var copy = decimals == null
+        ? magnitude.toString()
+        : magnitude.toStringAsFixed(decimals);
+    if (magnitude != 0 && double.parse(copy) == 0) copy = magnitude.toString();
+    if (decimals == null || (magnitude != 0 && double.parse(copy) == 0)) {
+      copy = copy.replaceFirst(RegExp(r'\.0$'), '');
+    }
+    return '${value < 0
+        ? '−'
+        : signed && value > 0
+        ? '+'
+        : ''}$copy';
+  }
+
+  static String intervalLabel(num lower, num upper, String suffix) {
+    final sameRounded = lower.toStringAsFixed(0) == upper.toStringAsFixed(0);
+    final decimals = sameRounded ? null : 0;
+    return '${label(lower, decimals: decimals, signed: true)}$suffix to '
+        '${label(upper, decimals: decimals, signed: true)}$suffix';
+  }
+
   /// Coordinates used both by the painter and acceptance checks.
   static double position(
     double value,

@@ -71,12 +71,8 @@ class QuantitativePainter extends CustomPainter {
 
   String refs(Map d) =>
       (d['source_ids'] as List).map((id) => '[$id]').join(' ');
-  String signed(num n, {int decimals = 0}) =>
-      '${n < 0
-          ? '−'
-          : n > 0
-          ? '+'
-          : ''}${n.abs().toStringAsFixed(decimals)}';
+  String signed(num n, {int? decimals}) =>
+      QuantitativeDocument.label(n, decimals: decimals, signed: true);
 
   @override
   void paint(Canvas c, Size size) {
@@ -160,18 +156,24 @@ class QuantitativePainter extends CustomPainter {
         c.drawLine(Offset(x(v), cy - 5), Offset(x(v), cy + 5), line);
       }
       c.drawCircle(Offset(x(e), cy), 3.5, Paint()..color = _accent);
-      // Endpoint labels are below, estimate above: nearby bounds never collide.
+      // Estimate above the mark; one range label below avoids endpoint collisions.
       text(
         c,
-        '${signed(e, decimals: 1)}$suffix',
+        '${signed(e, decimals: e % 1 == 0 ? 1 : null)}$suffix',
         x(e) - 30,
         cy - 19,
         65,
         size: 11,
         bold: true,
       );
-      text(c, '${signed(l)}$suffix', x(l) - 17, cy + 7, 52, size: 10.6);
-      text(c, '${signed(u)}$suffix', x(u) - 17, cy + 7, 52, size: 10.6);
+      text(
+        c,
+        QuantitativeDocument.intervalLabel(l, u, suffix as String),
+        20,
+        cy + 7,
+        392,
+        size: 10.6,
+      );
       text(c, r['note'] as String, 20, y + 53, 392, size: 10.2, color: _muted);
     }
     c.drawLine(
@@ -212,7 +214,14 @@ class QuantitativePainter extends CustomPainter {
         ..strokeWidth = .7,
     );
     text(c, '0', 20, baseline - 8, 20, size: 10);
-    text(c, maximum.toStringAsFixed(0), 16, plotTop - 4, 26, size: 9.5);
+    text(
+      c,
+      QuantitativeDocument.label(maximum),
+      16,
+      plotTop - 4,
+      26,
+      size: 9.5,
+    );
     c.drawLine(
       Offset(42, plotTop),
       Offset(402, plotTop),
@@ -232,7 +241,7 @@ class QuantitativePainter extends CustomPainter {
       );
       text(
         c,
-        value.toStringAsFixed(1),
+        QuantitativeDocument.label(value),
         x + cell * .18,
         baseline - height - 14,
         cell * .8,

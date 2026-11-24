@@ -5,6 +5,31 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:event_motion_example/src/matrix_document.dart';
 
 void main() {
+  test(
+    'subunit values never become zero and axis maxima preserve precision',
+    () {
+      expect(
+        QuantitativeDocument.label(-0.4, decimals: 0, signed: true),
+        '−0.4',
+      );
+      expect(
+        QuantitativeDocument.label(0.4, decimals: 0, signed: true),
+        '+0.4',
+      );
+      expect(QuantitativeDocument.label(0.004, decimals: 1), '0.004');
+      expect(QuantitativeDocument.label(0.4), '0.4');
+      expect(QuantitativeDocument.label(120.0), '120');
+      expect(
+        QuantitativeDocument.intervalLabel(-0.4, 0.4, '%'),
+        '−0.4% to +0.4%',
+      );
+      expect(
+        QuantitativeDocument.intervalLabel(1.01, 1.02, '%'),
+        '+1.01% to +1.02%',
+      );
+      expect(QuantitativeDocument.intervalLabel(1, 1, '%'), '+1% to +1%');
+    },
+  );
   test('matrix rows note is optional and limited to 60 characters', () {
     final d =
         jsonDecode(
