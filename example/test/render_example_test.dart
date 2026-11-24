@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:event_motion_example/quantitative_chart.dart' as quantitative;
+import 'package:event_motion_example/src/quantitative_document.dart';
 
 import 'package:alchemist/alchemist.dart' show loadFonts;
 import 'package:event_motion_example/agent_pipeline.dart' as pipeline;
@@ -101,6 +103,12 @@ void main() {
         },
       ),
     (
+      'quantitative_chart',
+      () => quantitative.build(
+        QuantitativeDocument.parse(input('quantitative_chart')),
+      ),
+    ),
+    (
       'data_story',
       () => data_story.build(input('data_story'), animated: false),
     ),
@@ -131,6 +139,7 @@ void main() {
       'comparison',
       'character_poster',
       'data_story',
+      'quantitative_chart',
       'editorial_illustration',
       'editorial_matrix',
     }.contains(name);
@@ -189,6 +198,7 @@ Future<void> _export(
     final customOutput = switch (name) {
       'workflow' => Platform.environment['EVENT_MOTION_WORKFLOW_OUT'],
       'hybrid' => Platform.environment['EVENT_MOTION_HYBRID_OUT'],
+      'quantitative_chart' ||
       'editorial_catalog' ||
       'editorial_illustration' ||
       'editorial_illustration_video' ||

@@ -63,6 +63,7 @@ O [mapa de ilustrações possíveis](mapa-de-ilustracoes.md) reúne os formatos,
 
 | Composição | Use para | Saída |
 | --- | --- | --- |
+| `quantitative_chart` | Estimativas com intervalos de confiança em um eixo assinado ou dois painéis de barras com unidades e eixos independentes. | PNG de 1080 × 1350; JSON editável e texto alternativo embutido. |
 | `data_story` | Linha, pontos pareados, rosca e barra empilhada. As composições aceitam anotação, evidências, cronologia, unidade e fontes. | PNG de 1440 × 1800 para linha e rosca. Pontos pareados e barra exportam em 1080 × 1350. A versão MP4 dura oito segundos. |
 | `editorial_catalog` | Explicações em oito a doze células, cada uma com um diagrama ilustrativo, paleta e ordem de leitura. | PNG e, quando solicitado, MP4 com destaque em sequência. |
 | `editorial_matrix` | Cronologia qualitativa com duas a quatro linhas. Data e mudança ficam ao lado de duas colunas de papéis. A matriz aceita um dado de destaque com a legenda logo abaixo. A nota de escopo e a chave de fontes ficam no rodapé. | PNG de 1440 × 1800. Com dado de destaque, exporta em 1080 × 1350. |
@@ -104,3 +105,5 @@ python3 -B tool/editorial_dots.py /path/to/briefing.json /path/to/new-attempt
 ```
 
 A entrada chama `codex exec` com Sol e pesquisa web, sem ferramenta de shell, e `claude -p` com Opus e saída estruturada. Ela usa os logins das duas CLIs. O processo local chama apenas os renderizadores do repo na montagem. A decisão `ready_for_review` libera o pacote para a fila. A ponte apresenta pendências como `needs_review`. Os eventos do Codex, respostas do Claude e diagnósticos do renderer ficam na pasta local da tentativa. [Claude Code em modo não interativo](https://code.claude.com/docs/en/headless)
+
+A matriz aceita também `rows_note` (até 60 caracteres), imediatamente acima das linhas. Para intervalos e painéis independentes, use as [entradas quantitativas e comandos de reprodução](mapa-de-ilustracoes.md#gráficos-quantitativos-com-incerteza-ou-painéis-independentes).

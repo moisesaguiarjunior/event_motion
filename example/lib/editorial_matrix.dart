@@ -76,6 +76,11 @@ class _Matrix extends StatelessWidget {
                 weight: FontWeight.w700,
               ),
           ]),
+          if (document.rowsNote case final note?) ...[
+            const SizedBox(height: 5),
+            _copy(note, size: 14, weight: FontWeight.w600, color: _muted),
+            const SizedBox(height: 5),
+          ],
           for (final row in document.rows) ...[
             const SizedBox(height: 1, child: ColoredBox(color: _rule)),
             Expanded(

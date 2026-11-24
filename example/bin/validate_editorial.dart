@@ -8,10 +8,12 @@ import '../lib/src/catalog_document.dart';
 import '../lib/src/data_story_document.dart';
 import '../lib/src/illustration_document.dart';
 import '../lib/src/matrix_document.dart';
+import '../lib/src/quantitative_document.dart';
 
 Future<void> main(List<String> args) async {
   if (args.length != 1 ||
       !const {
+        'quantitative_chart',
         'data_story',
         'editorial_catalog',
         'editorial_illustration',
@@ -26,6 +28,8 @@ Future<void> main(List<String> args) async {
   try {
     final input = await stdin.transform(utf8.decoder).join();
     switch (args.single) {
+      case 'quantitative_chart':
+        QuantitativeDocument.parse(input);
       case 'data_story':
         final data = jsonDecode(input);
         if (data is! Map<String, Object?>) {

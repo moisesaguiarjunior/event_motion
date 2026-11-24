@@ -46,3 +46,23 @@ O ComfyUI local exportou um chip RGBA com máscara usando nós nativos. O render
 O exemplo GSAP manteve a sequência e o mosaico em oito quadros comparados com o render anterior. O WebM com transparência teve 168 quadros e a composição em Fluvie teve 186, incluindo a introdução.
 
 Ao acrescentar uma possibilidade, registre o tipo de pauta, a fixture editável, o comando de reprodução e o estágio que já foi verificado. Use uma pauta sintética ou fontes públicas para exemplos compartilháveis. Mantenha pautas privadas e renders de revisão na pasta da tentativa.
+
+## Gráficos quantitativos com incerteza ou painéis independentes
+
+`quantitative_chart` exporta PNG 1080 × 1350 e recebe duas formas de entrada:
+
+- `kind: intervals`: duas a quatro estimativas independentes com limites inferior e superior, eixo assinado fixo, zero rotulado, rótulos diretos e um destaque em outra unidade fora do eixo. [Entrada sintética](../example/fixtures/quantitative_chart.json).
+- `kind: bar_panels`: dois painéis de duas a quatro barras categóricas, cada um com unidade e máximo próprios e base zero. A anotação pertence a uma categoria; datas irregulares não são conectadas. [Entrada sintética](../example/fixtures/quantitative_chart_panels.json).
+
+Ambos têm título, subtítulo, destaque com legenda e fontes, contexto, nota de escopo e chave de fontes. O worker inclui os exemplos nos prompts de planejamento e redação, valida os IDs verificados e incorpora o texto alternativo no PNG. A validação Dart é compartilhada com o renderer; limites fora do eixo, intervalos invertidos, valores negativos em barras e referências ausentes são rejeitados. Texto que excede a página faz o render falhar, evitando uma entrega cortada.
+
+```bash
+dart example/bin/validate_editorial.dart quantitative_chart < example/fixtures/quantitative_chart.json
+bash tool/render_example.sh quantitative_chart example/fixtures/quantitative_chart.json /tmp/dots-intervals
+bash tool/render_example.sh quantitative_chart example/fixtures/quantitative_chart_panels.json /tmp/dots-panels
+bash tool/render_example.sh editorial_matrix example/fixtures/editorial_matrix_rows_note.json /tmp/dots-rows-note
+```
+
+A matriz aceita `rows_note`, uma nota opcional de até 60 caracteres imediatamente acima da primeira linha. Use para indicar o período das linhas sem confundir observações históricas com um lançamento posterior. Omitir o campo preserva a composição anterior.
+
+Verificação: exportações reais pelo comando acima, prévias conferidas a 360/390 px e testes em `example/test/quantitative_document_test.dart`, `example/test/editorial_documents_test.dart` e `tool/test_editorial_dots.py`. A geometria dos intervalos é calculada sem arredondar; apenas os rótulos são arredondados. O limite inferior positivo da segunda linha sintética fica 28,16 pixels à direita de zero no PNG. Pautas e evidências privadas permanecem nas pastas das tentativas da ponte.

@@ -1,0 +1,70 @@
+{
+  "kind": "bar_panels",
+  "title": "Two measures, separate scales",
+  "subtitle": "Synthetic acceptance fixture \u00b7 independent categorical snapshots",
+  "hero": {
+    "value": "~10 percentage points",
+    "caption": "Management-reported margin difference, Nov. 19. Mix, measurement window and program terms undisclosed.",
+    "source_ids": [
+      "S1"
+    ]
+  },
+  "context": "Some programs migrated during Q3; the contract terms and new-versus-converted split are undisclosed.",
+  "footnote": "Panels use incomparable units. Company-wide Q3 margin: 34.1% vs 34.8% a year earlier. No causal comparison.",
+  "sources": [
+    {
+      "id": "S1",
+      "label": "Synthetic study \u00b7 November 2026 \u00b7 example data"
+    }
+  ],
+  "alt_text": "Synthetic chart of three estimates and their uncertainty; only the task interval crosses zero.",
+  "panels": [
+    {
+      "title": "Time-and-materials share",
+      "unit": "% of total recognized revenue",
+      "maximum": 100,
+      "note": "Contract mix before the platform launch.",
+      "source_ids": [
+        "S1"
+      ],
+      "bars": [
+        {
+          "label": "FY2023",
+          "value": 79
+        },
+        {
+          "label": "FY2024",
+          "value": 71,
+          "annotation": "$59.8M rise"
+        },
+        {
+          "label": "FY2025",
+          "value": 67
+        }
+      ]
+    },
+    {
+      "title": "Platform annualized run rate",
+      "unit": "USD millions \u00b7 annualized revenue run rate",
+      "maximum": 120,
+      "note": "Series predates Aug. 2026 launch; new vs converted undisclosed.",
+      "source_ids": [
+        "S1"
+      ],
+      "bars": [
+        {
+          "label": "Sep 2025",
+          "value": 11
+        },
+        {
+          "label": "Jun 2026",
+          "value": 53
+        },
+        {
+          "label": "Sep 2026",
+          "value": 107
+        }
+      ]
+    }
+  ]
+}

@@ -74,6 +74,20 @@ class EditorialTest(unittest.TestCase):
 
         return editorial.process(self.brief, self.workspace, Replies()), stages
 
+    def test_quantitative_chart_requires_verified_sources_and_still_delivery(self):
+        visual = json.loads((editorial.ROOT / "example/fixtures/quantitative_chart.json").read_text())
+        plan = copy.deepcopy(self.plan)
+        plan["sources"][0]["id"] = "S1"
+        draft = dict(self.draft, template="quantitative_chart", media="image",
+                     visual_json=json.dumps(visual))
+        editorial.check_visual_choice(draft, ["post", "infographic"])
+        self.assertEqual(editorial.checked_draft(draft, plan)["alt_text"], draft["alt_text"])
+        with self.assertRaises(editorial.EditorialError):
+            editorial.check_visual_choice(dict(draft, media="both"), ["post"])
+        plan["sources"][0]["state"] = "provided_only"
+        with self.assertRaises(editorial.EditorialError):
+            editorial.checked_draft(draft, plan)
+
     def fake_render(self, visual, draft, logs, artifacts):
         editorial.save(artifacts / "visual.json", visual)
         (artifacts / "imagem.png").write_bytes(b"png")

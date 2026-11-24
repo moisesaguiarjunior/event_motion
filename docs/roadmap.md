@@ -69,6 +69,7 @@ See the [command and input guide](editorial-styles.md), the [verification record
 
 | Stage | Scope | Verification |
 | --- | --- | --- |
+| Quantitative formats | Added independent zero-based bar panels, signed dot-and-whisker estimates, and an optional matrix row-period note. | Synthetic editable inputs, 1080 × 1350 PNG exports, exact interval-coordinate tests, source validation and phone-size inspection. [Inputs and commands](mapa-de-ilustracoes.md#gráficos-quantitativos-com-incerteza-ou-painéis-independentes). |
 | Initial integration | `editorial_illustration` exports an editable diagram, PNG, and optional silent MP4. ComfyUI supplies local PNG layers. GSAP drives the existing HyperFrames composition. | Replay the illustration from its packaged JSON and assets. Check the transparent HyperFrames clip and the Fluvie composite. |
 | Next | Produce a review contact sheet from the key frames already defined by the visual or the composition. | Prepare a 360 px contact sheet that makes missing cards, text, and overlays visible before review. |
 | After a suitable brief | Add one new arrangement or a 3D asset recipe when a technology story needs it. Compare an existing diagram with a local Three.js or Blender render when geometry is part of the explanation. | Save the fixture, reusable assets, and export command. Confirm the image reads at feed size and the source package can be replayed. |
